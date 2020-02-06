@@ -2,7 +2,7 @@ import React from 'react';
 
 import ForkMe from './components/ForkMe';
 import Header from './components/Header';
-import Serialize from './components/Serialize';
+import NewKey from './components/NewKey';
 import Footer from './components/Footer';
 
 export default function App() {
@@ -10,7 +10,7 @@ export default function App() {
     <>
       <ForkMe />
       <Header />
-      <div>asdf</div>
+      <NewKey />
       <Footer />
     </>
   );
