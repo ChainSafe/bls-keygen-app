@@ -20,7 +20,11 @@ import {
 export default class NewKey extends React.Component {
   constructor(props: any) {
     super(props);
-    this.state = {}
+    this.state = {
+      newKeyStep: 0,
+      fromMnemonicStep: 0,
+      fromMasterStep: 0,
+    };
   }
 
   generateEntropy(): Uint8Array {
@@ -32,7 +36,10 @@ export default class NewKey extends React.Component {
   generateKey() {
     const entropy: Buffer = Buffer.from(this.generateEntropy());
     const masterKey: Buffer = deriveMasterSK(entropy);
-    this.setState({ masterKey });
+    this.setState({
+      masterKey,
+      newKeyStep: 1,
+    });
   }
 
   validateMnemonic(inputKey) {
@@ -50,14 +57,31 @@ export default class NewKey extends React.Component {
       resultComparison = deriveKeyFromMnemonic(inputKey);
     }
     console.log('resultComparison: ', resultComparison);
+
+    fromMnemonicStep += 1;
   }
 
-  showRestoreFromMnemonic() {
-    this.setState({ showRestoreFromMnemonic: true });
+  newKeyNext() {
+    this.setState({ newKeyStep: this.state.newKeyStep + 1 });
+  }
+
+  fromMnemonicNext() {
+    this.setState({ fromMnemonicStep: this.state.fromMnemonicStep + 1 });
+  }
+
+  goBack() {
+    if (this.state.newKeyStep > 0) {
+      this.setState({ newKeyStep: this.state.newKeyStep - 1 });
+    } else if (this.state.fromMnemonicStep > 0) {
+      this.setState({ fromMnemonicStep: this.state.fromMnemonicStep - 1 });
+    } else if (this.state.fromMasterStep > 0) {
+      this.setState({ fromMasterStep: this.state.fromMasterStep - 1 });
+    }
   }
 
   renderWizard() {
-    if (this.state.mnemonic) {
+    const backButton = <button onClick={() => this.goBack()}>Back</button>;
+    if (this.state.newKeyStep === 1) {
       return <>
         <button onClick={() => this.exportMasterKey()}>Export Master Key</button>
         <button onClick={() => this.exportValidatorKeys()}>Export Validator Keys</button>
@@ -67,17 +91,19 @@ export default class NewKey extends React.Component {
         </div>
         <br />
         <div>Master Key: {this.state.masterKey}</div>
+        {backButton}
       </>;
-    } else if (this.state.showRestoreFromMnemonic) {
+    } else if (this.state.fromMnemonicStep === 1) {
       return <>
         Enter the mnemonic
         <input />
         <button onClick={() => this.validateMnemonic()}>Next</button>
+        {backButton}
       </>;
     } else {
       return <>
         <button onClick={() => this.generateKey()}>Generate New Key</button>
-        <button onClick={() => this.showRestoreFromMnemonic()}>Restore from Mnemonic</button>
+        <button onClick={() => this.fromMnemonicNext()}>Restore from Mnemonic</button>
         <button onClick={() => this.placeholder()}>Restore from Master</button>
       </>;
     }
