@@ -1,33 +1,60 @@
 import * as React from 'react';
 import * as bip39 from 'bip39';
-import {Keystore} from "@chainsafe/bls-keystore";
+import { saveAs } from 'file-saver';
 
 import {
   deriveMasterSK,
-  deriveChildSK,
-  deriveChildSKMultiple,
-  pathToIndices,
-} from "@chainsafe/bls-hd-key";
+  // deriveChildSK,
+  // deriveChildSKMultiple,
+  // pathToIndices,
+} from '@chainsafe/bls-hd-key';
 
 import {
-    generateRandomSecretKey,
+    // generateRandomSecretKey,
     deriveKeyFromMnemonic,
-    deriveKeyFromEntropy,
-    deriveKeyFromMaster,
+    // deriveKeyFromEntropy,
+    // deriveKeyFromMaster,
     deriveEth2ValidatorKeys,
-} from "@chainsafe/bls-keygen";
+} from '@chainsafe/bls-keygen';
 
-export default class NewKey extends React.Component {
+import { Keystore } from '@chainsafe/bls-keystore';
+
+type Props = {};
+type State = {
+  newKeyStep: number,
+  fromMnemonicStep: number,
+  storeKeysStep: number,
+  mnemonic: string | undefined,
+  masterKey: string | undefined,
+  mnemonicInput: string,
+  password: string | undefined,
+  passwordConfirm: string | undefined,
+  keystore: any | undefined,
+};
+
+export default class NewKey extends React.Component<Props, State> {
+  initialSteps: any;
+
   constructor(props: any) {
     super(props);
-    this.state = {
+
+    this.initialSteps = {
       newKeyStep: 0,
       fromMnemonicStep: 0,
-      fromMasterStep: 0,
+      storeKeysStep: 0,
+    };
+
+    this.state = {
+      ...this.initialSteps,
+      mnemonicInput: '',
+      masterKey: undefined,
+      password: undefined,
+      passwordConfirm: undefined,
+      keystore: undefined,
     };
   }
 
-  generateEntropy(): Uint8Array {
+  generateEntropy(): string {
     const mnemonic = bip39.generateMnemonic();
     this.setState({ mnemonic });
     return mnemonic;
@@ -35,6 +62,7 @@ export default class NewKey extends React.Component {
 
   generateKey() {
     const entropy: Buffer = Buffer.from(this.generateEntropy());
+    console.log('mnemonic: ', entropy);
     const masterKey: Buffer = deriveMasterSK(entropy);
     this.setState({
       masterKey,
@@ -42,23 +70,26 @@ export default class NewKey extends React.Component {
     });
   }
 
-  validateMnemonic(inputKey) {
-    const isValid = bip39.validateMnemonic(inputKey);
-    console.log('isValid: ', isValid);
+  mnemonicInputChange(event: any) {
+    this.setState({ mnemonicInput: event.target.value });
+  }
+
+  validateMnemonic() {
+    const { mnemonicInput, masterKey } = this.state
+    const isValid = bip39.validateMnemonic(mnemonicInput);
 
     if (!isValid) {
       alert('not a valid mnemonic');
       return;
     }
 
-    if (this.state.masterKey) {
-      resultComparison = masterKey === deriveKeyFromMnemonic(inputKey);
-    } else {
-      resultComparison = deriveKeyFromMnemonic(inputKey);
-    }
-    console.log('resultComparison: ', resultComparison);
+    const newMasterKey = deriveKeyFromMnemonic(mnemonicInput);
+    console.log('dervid: ', newMasterKey);
 
-    fromMnemonicStep += 1;
+    this.setState({
+      ...this.initialSteps,
+      masterKey: newMasterKey,
+    });
   }
 
   newKeyNext() {
@@ -74,39 +105,92 @@ export default class NewKey extends React.Component {
       this.setState({ newKeyStep: this.state.newKeyStep - 1 });
     } else if (this.state.fromMnemonicStep > 0) {
       this.setState({ fromMnemonicStep: this.state.fromMnemonicStep - 1 });
-    } else if (this.state.fromMasterStep > 0) {
-      this.setState({ fromMasterStep: this.state.fromMasterStep - 1 });
+    } else if (this.state.storeKeysStep > 0) {
+      this.setState({ storeKeysStep: this.state.storeKeysStep - 1 });
     }
   }
 
   renderWizard() {
     const backButton = <button onClick={() => this.goBack()}>Back</button>;
-    if (this.state.newKeyStep === 1) {
+
+    if (this.state.storeKeysStep === 1) {
       return <>
-        <button onClick={() => this.exportMasterKey()}>Export Master Key</button>
-        <button onClick={() => this.exportValidatorKeys()}>Export Validator Keys</button>
-        <div>
-          Please write down this mnemonic:
-          <div>{this.state.mnemonic}</div>
-        </div>
-        <br />
+        Enter password for your keys:
+        <input type="password" onChange={(event) => this.setState({ password: event.target.value })} />
+        <input type="password" onChange={(event) => this.setState({ passwordConfirm: event.target.value })} />
+        {this.state.password !== this.state.passwordConfirm && <div>passwords do not match</div>}
+        <button onClick={() => this.storeKeys()}>Store Keys</button>
+        {backButton}
+      </>
+    } else if (this.state.newKeyStep === 1) {
+      return <>
+        <button onClick={() => this.showExportMasterKey()}>Export Master Key</button>
+        <button onClick={() => this.showPasswordPrompt()}>Export Validator Keys</button>
         <div>Master Key: {this.state.masterKey}</div>
         {backButton}
       </>;
     } else if (this.state.fromMnemonicStep === 1) {
       return <>
         Enter the mnemonic
-        <input />
+        <input onChange={(event) => this.setState({ mnemonicInput: event.target.value })} />
         <button onClick={() => this.validateMnemonic()}>Next</button>
+        {backButton}
+      </>;
+    } else if (this.state.newKeyStep === 2) {
+      return <>
+        Please write down this mnemonic:
+        <div>{this.state.mnemonic}</div>
+        {backButton}
+      </>;
+    } else if (this.state.newKeyStep === 3) {
+      return <>
+        Validator Keys:
+          <div>Withdraw Key: {}</div>
+          <div>Signing Key: {}</div>
+        <button></button>
         {backButton}
       </>;
     } else {
       return <>
         <button onClick={() => this.generateKey()}>Generate New Key</button>
         <button onClick={() => this.fromMnemonicNext()}>Restore from Mnemonic</button>
-        <button onClick={() => this.placeholder()}>Restore from Master</button>
       </>;
     }
+  }
+
+  showPasswordPrompt(): void {
+    this.setState({ storeKeysStep: 1 });
+  }
+
+  generateKeystore(key: Buffer): any {
+    const { password } = this.state;
+    const keystore = Keystore.encrypt(key, password, "m/12381/60/0/0");
+
+    keystore.verifyPassword(password); // true | false
+
+    const decryptedPrivateKey: Buffer = keystore.decrypt(password);
+
+    return keystore.toJSON(); // string
+  }
+
+  storeKeys(): void {
+    const validatorKeys = deriveEth2ValidatorKeys(this.state.masterKey, 0);
+    const { withdrawal, signing } = validatorKeys;
+
+    const withdrawalKeystore = this.generateKeystore(withdrawal);
+    const signingKeystore = this.generateKeystore(signing);
+
+    console.log('withdrawalKeystore: ', withdrawalKeystore);
+    console.log('signingKeystore: ', signingKeystore);
+
+    var withdrawalBlob = new Blob([JSON.stringify(withdrawalKeystore)], { type: "application/json" });
+    var signingBlob = new Blob([JSON.stringify(signingKeystore)], { type: "application/json" });
+    saveAs(withdrawalBlob, 'wblob.json');
+    saveAs(signingBlob, 'sblob.json');
+  }
+
+  showExportMasterKey(): void {
+    this.newKeyNext();
   }
 
   render () {
