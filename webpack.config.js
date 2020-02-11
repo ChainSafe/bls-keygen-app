@@ -45,7 +45,7 @@ const config = {
       filename: 'css/[name].bundle.css'
     }),
     new HtmlWebpackPlugin({
-      title: 'Simple Serialize | Chainsafe Systems',
+      title: 'BLS Keygen App | Chainsafe Systems',
       template: 'src/index.html',
     }),
   ],
