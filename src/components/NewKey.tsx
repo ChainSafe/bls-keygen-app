@@ -12,8 +12,6 @@ import {
 import {
     // generateRandomSecretKey,
     deriveKeyFromMnemonic,
-    // deriveKeyFromEntropy,
-    // deriveKeyFromMaster,
     deriveEth2ValidatorKeys,
 } from '@chainsafe/bls-keygen';
 
@@ -25,9 +23,9 @@ type State = {
   fromMnemonicStep: number,
   storeKeysStep: number,
   mnemonic: string | undefined,
-  masterKey: string | undefined,
+  masterKey: string,
   mnemonicInput: string,
-  password: string | undefined,
+  password: string,
   passwordConfirm: string | undefined,
   keystore: any | undefined,
 };
@@ -84,12 +82,13 @@ export default class NewKey extends React.Component<Props, State> {
     }
 
     const newMasterKey = deriveKeyFromMnemonic(mnemonicInput);
-    console.log('dervid: ', newMasterKey);
 
     this.setState({
       ...this.initialSteps,
       masterKey: newMasterKey,
     });
+
+    this.setState({ newKeyStep: 1 });
   }
 
   newKeyNext() {
@@ -101,12 +100,12 @@ export default class NewKey extends React.Component<Props, State> {
   }
 
   goBack() {
-    if (this.state.newKeyStep > 0) {
+    if (this.state.storeKeysStep > 0) {
+      this.setState({ storeKeysStep: this.state.storeKeysStep - 1 });
+    } else if (this.state.newKeyStep > 0) {
       this.setState({ newKeyStep: this.state.newKeyStep - 1 });
     } else if (this.state.fromMnemonicStep > 0) {
       this.setState({ fromMnemonicStep: this.state.fromMnemonicStep - 1 });
-    } else if (this.state.storeKeysStep > 0) {
-      this.setState({ storeKeysStep: this.state.storeKeysStep - 1 });
     }
   }
 
@@ -142,14 +141,6 @@ export default class NewKey extends React.Component<Props, State> {
         <div>{this.state.mnemonic}</div>
         {backButton}
       </>;
-    } else if (this.state.newKeyStep === 3) {
-      return <>
-        Validator Keys:
-          <div>Withdraw Key: {}</div>
-          <div>Signing Key: {}</div>
-        <button></button>
-        {backButton}
-      </>;
     } else {
       return <>
         <button onClick={() => this.generateKey()}>Generate New Key</button>
@@ -168,7 +159,7 @@ export default class NewKey extends React.Component<Props, State> {
 
     keystore.verifyPassword(password); // true | false
 
-    const decryptedPrivateKey: Buffer = keystore.decrypt(password);
+    // const decryptedPrivateKey: Buffer = keystore.decrypt(password);
 
     return keystore.toJSON(); // string
   }
@@ -179,9 +170,6 @@ export default class NewKey extends React.Component<Props, State> {
 
     const withdrawalKeystore = this.generateKeystore(withdrawal);
     const signingKeystore = this.generateKeystore(signing);
-
-    console.log('withdrawalKeystore: ', withdrawalKeystore);
-    console.log('signingKeystore: ', signingKeystore);
 
     var withdrawalBlob = new Blob([JSON.stringify(withdrawalKeystore)], { type: "application/json" });
     var signingBlob = new Blob([JSON.stringify(signingKeystore)], { type: "application/json" });
