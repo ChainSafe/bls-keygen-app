@@ -114,38 +114,78 @@ export default class NewKey extends React.Component<Props, State> {
 
     if (this.state.storeKeysStep === 1) {
       return <>
-        Enter password for your keys:
-        <input type="password" onChange={(event) => this.setState({ password: event.target.value })} />
-        <input type="password" onChange={(event) => this.setState({ passwordConfirm: event.target.value })} />
-        {this.state.password !== this.state.passwordConfirm && <div>passwords do not match</div>}
-        <button onClick={() => this.storeKeys()}>Store Keys</button>
-        {backButton}
+          <div className="text-section">
+            <div>
+              <div className="keygen-title">
+                Enter password for your keys:
+              </div>
+              <input type="password" onChange={(event) => this.setState({ password: event.target.value })} />
+            </div>
+            <div>
+              <div className="keygen-title">
+                Confirm password:
+              </div>
+              <input type="password" onChange={(event) => this.setState({ passwordConfirm: event.target.value })} />
+            </div>
+          </div>
+          <div className="button-section">
+            {this.state.password !== this.state.passwordConfirm && <div>passwords do not match</div>}
+            <button onClick={() => this.storeKeys()}>Store Keys</button>
+            {backButton}
+          </div>
       </>
     } else if (this.state.newKeyStep === 1) {
       return <>
-        <button onClick={() => this.showExportMasterKey()}>Export Master Key</button>
-        <button onClick={() => this.showPasswordPrompt()}>Export Validator Keys</button>
-        <div>Master Key: {this.state.masterKey}</div>
-        {backButton}
+        <div className="text-section">
+          <div>
+            <div className="keygen-title">
+              Master Key:
+            </div>
+            {this.state.masterKey}
+          </div>
+          <div>
+            <div className="keygen-title">
+              Mnemonic:
+            </div>
+            {this.state.mnemonic}
+          </div>
+        </div>
+        <div className="button-section">
+          <button onClick={() => this.showExportMasterKey()}>Export Master Key</button>
+          <button onClick={() => this.showPasswordPrompt()}>Export Validator Keys</button>
+          {backButton}
+        </div>
       </>;
     } else if (this.state.fromMnemonicStep === 1) {
       return <>
-        Enter the mnemonic
-        <input onChange={(event) => this.setState({ mnemonicInput: event.target.value })} />
-        <button onClick={() => this.validateMnemonic()}>Next</button>
-        {backButton}
+        <div className="text-section">
+          <div className="keygen-title">
+            Enter the mnemonic
+          </div>
+          <input onChange={(event) => this.setState({ mnemonicInput: event.target.value })} />
+        </div>
+        <div className="button-section">
+          <button onClick={() => this.validateMnemonic()}>Next</button>
+          {backButton}
+        </div>
       </>;
     } else if (this.state.newKeyStep === 2) {
       return <>
-        Please write down this mnemonic:
-        <div>{this.state.mnemonic}</div>
-        {backButton}
+        <div className="text-section">
+          <div className="keygen-title">
+            Please write down this mnemonic:
+          </div>
+          <div>{this.state.mnemonic}</div>
+        </div>
+        <div className="button-section">
+          {backButton}
+        </div>
       </>;
     } else {
-      return <>
+      return <div className="button-section">
         <button onClick={() => this.generateKey()}>Generate New Key</button>
         <button onClick={() => this.fromMnemonicNext()}>Restore from Mnemonic</button>
-      </>;
+      </div>;
     }
   }
 
@@ -182,6 +222,8 @@ export default class NewKey extends React.Component<Props, State> {
   }
 
   render () {
-    return this.renderWizard();
+    return <span class="keygen-step">
+      {this.renderWizard()}
+      </span>
   }
 }
