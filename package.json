@@ -8,7 +8,7 @@
   "scripts": {
     "check-types": "tsc",
     "dev": "cross-env NODE_ENV=development webpack-dev-server --color --progress --watch",
-    "build": "cross-env NODE_ENV=production webpack --color --progress --watch",
+    "build": "cross-env NODE_ENV=production webpack --color --progress",
     "start": "serve dist",
     "lint": "eslint --ext .ts src/"
   },
