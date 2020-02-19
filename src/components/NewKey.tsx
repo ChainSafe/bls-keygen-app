@@ -141,7 +141,7 @@ export default class NewKey extends React.Component<Props, State> {
             <div className="keygen-title">
               Master Key:
             </div>
-            {this.state.masterKey}
+            0x{this.state.masterKey}
           </div>
           <div>
             <div className="keygen-title">
