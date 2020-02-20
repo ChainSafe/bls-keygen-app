@@ -110,81 +110,85 @@ export default class NewKey extends React.Component<Props, State> {
   }
 
   renderWizard() {
-    const backButton = <button onClick={() => this.goBack()}>Back</button>;
+    const backButton = <button class='button is-secondary' onClick={() => this.goBack()}>Back</button>;
+
+    const passwordsMatch = this.state.password === this.state.passwordConfirm;
 
     if (this.state.storeKeysStep === 1) {
       return <>
-          <div className="text-section">
+          <div className='text-section'>
             <div>
-              <div className="keygen-title">
+              <div className='keygen-title'>
                 Enter password for your keys:
               </div>
-              <input type="password" onChange={(event) => this.setState({ password: event.target.value })} />
+              <input class="input" placeholder="Enter password" type='password' onChange={(event) => this.setState({ password: event.target.value })} />
             </div>
             <div>
-              <div className="keygen-title">
+              <div className='keygen-title'>
                 Confirm password:
               </div>
-              <input type="password" onChange={(event) => this.setState({ passwordConfirm: event.target.value })} />
+              <input class="input" placeholder="Confirm password" type='password' onChange={(event) => this.setState({ passwordConfirm: event.target.value })} />
             </div>
           </div>
-          <div className="button-section">
-            {this.state.password !== this.state.passwordConfirm && <div>passwords do not match</div>}
-            <button onClick={() => this.storeKeys()}>Store Keys</button>
+          <div className='button-section'>
+            {!passwordsMatch && <div>passwords do not match</div>}
+            <button class='button is-primary' onClick={() => this.storeKeys()} disabled={!passwordsMatch}>Store Keys</button>
             {backButton}
           </div>
       </>
     } else if (this.state.newKeyStep === 1) {
       return <>
-        <div className="text-section">
+        <div className='text-section'>
           <div>
-            <div className="keygen-title">
+            <div className='keygen-title'>
               Master Key:
             </div>
             0x{this.state.masterKey}
           </div>
           <div>
-            <div className="keygen-title">
+            <div className='keygen-title'>
               Mnemonic:
             </div>
             {this.state.mnemonic}
           </div>
         </div>
-        <div className="button-section">
-          <button onClick={() => this.showExportMasterKey()}>Export Master Key</button>
-          <button onClick={() => this.showPasswordPrompt()}>Export Validator Keys</button>
+        <div className='button-section'>
+          <button class='button is-primary' onClick={() => this.showExportMasterKey()}>Export Master Key</button>
+          <button class='button is-primary' onClick={() => this.showPasswordPrompt()}>Export Validator Keys</button>
           {backButton}
         </div>
       </>;
     } else if (this.state.fromMnemonicStep === 1) {
       return <>
-        <div className="text-section">
-          <div className="keygen-title">
+        <div className='text-section'>
+          <div className='keygen-title'>
             Enter the mnemonic
           </div>
-          <input onChange={(event) => this.setState({ mnemonicInput: event.target.value })} />
+          <input class="input" placeholder="Enter password" type="text" onChange={(event) => this.setState({ mnemonicInput: event.target.value })} />
         </div>
-        <div className="button-section">
-          <button onClick={() => this.validateMnemonic()}>Next</button>
+        <div className='button-section'>
+          <button class='button is-primary' onClick={() => this.validateMnemonic()}>Next</button>
           {backButton}
         </div>
       </>;
     } else if (this.state.newKeyStep === 2) {
       return <>
-        <div className="text-section">
-          <div className="keygen-title">
+        <div className='text-section'>
+          <div className='keygen-title'>
             Please write down this mnemonic:
           </div>
           <div>{this.state.mnemonic}</div>
         </div>
-        <div className="button-section">
+        <div className='button-section'>
           {backButton}
         </div>
       </>;
     } else {
-      return <div className="button-section">
-        <button onClick={() => this.generateKey()}>Generate New Key</button>
-        <button onClick={() => this.fromMnemonicNext()}>Restore from Mnemonic</button>
+      return <div className='button-section'>
+        <button class='button is-primary' onClick={() => this.generateKey()}>Generate New Key</button>
+        <br />
+        <button class='button is-primary' onClick={() => this.fromMnemonicNext()}>Restore from Mnemonic</button>
+        <br />
       </div>;
     }
   }
@@ -195,7 +199,7 @@ export default class NewKey extends React.Component<Props, State> {
 
   generateKeystore(key: Buffer): any {
     const { password } = this.state;
-    const keystore = Keystore.encrypt(key, password, "m/12381/60/0/0");
+    const keystore = Keystore.encrypt(key, password, 'm/12381/60/0/0');
 
     keystore.verifyPassword(password); // true | false
 
@@ -211,8 +215,8 @@ export default class NewKey extends React.Component<Props, State> {
     const withdrawalKeystore = this.generateKeystore(withdrawal);
     const signingKeystore = this.generateKeystore(signing);
 
-    var withdrawalBlob = new Blob([JSON.stringify(withdrawalKeystore)], { type: "application/json" });
-    var signingBlob = new Blob([JSON.stringify(signingKeystore)], { type: "application/json" });
+    var withdrawalBlob = new Blob([JSON.stringify(withdrawalKeystore)], { type: 'application/json' });
+    var signingBlob = new Blob([JSON.stringify(signingKeystore)], { type: 'application/json' });
     saveAs(withdrawalBlob, 'wblob.json');
     saveAs(signingBlob, 'sblob.json');
   }
@@ -222,7 +226,7 @@ export default class NewKey extends React.Component<Props, State> {
   }
 
   render () {
-    return <span class="keygen-step">
+    return <span class='keygen-step'>
       {this.renderWizard()}
       </span>
   }
