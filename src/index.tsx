@@ -7,7 +7,7 @@ import AlertTemplate from 'react-alert-template-basic'
 require('./styles.scss');
 
 const options = {
-  timeout: 5000,
+  timeout: 3000,
   offset: '30px',
   transition: transitions.SCALE
 };

@@ -20,13 +20,6 @@ const config = {
   },
   module: {
     rules: [
-      // {
-      //   test: /worker\.js$/,
-      //   use: {
-      //     loader: 'worker-loader',
-      //     options: { inline: true, publicPath: 'http://localhost:8080/', name: 'worker.js' }
-      //   }
-      // },
       {
       test: /\.scss$/,
       use: [

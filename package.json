@@ -42,8 +42,7 @@
     "react-loading-overlay": "^1.0.1",
     "react-spinners": "^0.8.0",
     "sass-loader": "^7.1.0",
-    "style-loader": "^0.23.1",
-    "workerpool": "^5.0.4"
+    "style-loader": "^0.23.1"
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",
@@ -66,7 +65,6 @@
     "webpack": "^4.33.0",
     "webpack-cli": "^3.3.2",
     "webpack-dev-server": "^3.6.0",
-    "worker-loader": "^2.0.0",
     "workerize-loader": "^1.1.0"
   }
 }
