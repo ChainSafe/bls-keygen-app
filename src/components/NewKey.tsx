@@ -1,23 +1,23 @@
 import * as React from 'react';
 import * as bip39 from 'bip39';
 import { saveAs } from 'file-saver';
+import { withAlert } from 'react-alert'
+
+import LoadingOverlay from 'react-loading-overlay'
+import BounceLoader from 'react-spinners/BounceLoader'
+import worker from 'workerize-loader!./worker.js';
 
 import {
   deriveMasterSK,
-  // deriveChildSK,
-  // deriveChildSKMultiple,
-  // pathToIndices,
 } from '@chainsafe/bls-hd-key';
 
 import {
-    // generateRandomSecretKey,
-    deriveKeyFromMnemonic,
     deriveEth2ValidatorKeys,
 } from '@chainsafe/bls-keygen';
 
-import { Keystore } from '@chainsafe/bls-keystore';
-
-type Props = {};
+type Props = {
+  alert: any,
+};
 type State = {
   newKeyStep: number,
   fromMnemonicStep: number,
@@ -28,9 +28,15 @@ type State = {
   password: string,
   passwordConfirm: string | undefined,
   keystore: any | undefined,
+  showOverlay: boolean,
+  overlayText: string,
 };
 
-export default class NewKey extends React.Component<Props, State> {
+const blobify = (keystore: string) => new Blob([JSON.stringify(keystore)], { type: 'application/json' });
+
+const workerInstance = worker();
+
+class NewKey extends React.Component<Props, State> {
   initialSteps: any;
 
   constructor(props: any) {
@@ -49,6 +55,8 @@ export default class NewKey extends React.Component<Props, State> {
       password: undefined,
       passwordConfirm: undefined,
       keystore: undefined,
+      showOverlay: false,
+      overlayText: ''
     };
   }
 
@@ -60,7 +68,6 @@ export default class NewKey extends React.Component<Props, State> {
 
   generateKey() {
     const entropy: Buffer = Buffer.from(this.generateEntropy());
-    console.log('mnemonic: ', entropy);
     const masterKey: Buffer = deriveMasterSK(entropy);
     this.setState({
       masterKey,
@@ -70,25 +77,6 @@ export default class NewKey extends React.Component<Props, State> {
 
   mnemonicInputChange(event: any) {
     this.setState({ mnemonicInput: event.target.value });
-  }
-
-  validateMnemonic() {
-    const { mnemonicInput, masterKey } = this.state
-    const isValid = bip39.validateMnemonic(mnemonicInput);
-
-    if (!isValid) {
-      alert('not a valid mnemonic');
-      return;
-    }
-
-    const newMasterKey = deriveKeyFromMnemonic(mnemonicInput);
-
-    this.setState({
-      ...this.initialSteps,
-      masterKey: newMasterKey,
-    });
-
-    this.setState({ newKeyStep: 1 });
   }
 
   newKeyNext() {
@@ -109,8 +97,35 @@ export default class NewKey extends React.Component<Props, State> {
     }
   }
 
+  callValidateMnemonicWorker() {
+    const { mnemonicInput } = this.state;
+
+    this.setState({
+      showOverlay: true,
+      overlayText: 'Validating mnemonic...',
+    });
+
+    workerInstance.validateMnemonic(mnemonicInput)
+      .then((newMasterKey: string) => {
+        this.setState({
+          ...this.initialSteps,
+          newKeyStep: 1,
+          showOverlay: false,
+          masterKey: newMasterKey,
+        });
+      })
+      .catch(function (error: any) {
+        this.showError(error.message);
+        this.setState({ showOverlay: false });
+      }.bind(this));
+  }
+
+  showError(errorMessage: string) {
+    this.props.alert.error(errorMessage);
+  }
+
   renderWizard() {
-    const backButton = <button class='button is-secondary' onClick={() => this.goBack()}>Back</button>;
+    const backButton = <button className='button is-secondary' onClick={() => this.goBack()}>Back</button>;
 
     const passwordsMatch = this.state.password === this.state.passwordConfirm;
 
@@ -121,18 +136,18 @@ export default class NewKey extends React.Component<Props, State> {
               <div className='keygen-title'>
                 Enter password for your keys:
               </div>
-              <input class="input" placeholder="Enter password" type='password' onChange={(event) => this.setState({ password: event.target.value })} />
+              <input className='input' placeholder='Enter password' type='password' onChange={(event) => this.setState({ password: event.target.value })} />
             </div>
             <div>
               <div className='keygen-title'>
                 Confirm password:
               </div>
-              <input class="input" placeholder="Confirm password" type='password' onChange={(event) => this.setState({ passwordConfirm: event.target.value })} />
+              <input className='input' placeholder='Confirm password' type='password' onChange={(event) => this.setState({ passwordConfirm: event.target.value })} />
             </div>
           </div>
           <div className='button-section'>
             {!passwordsMatch && <div>passwords do not match</div>}
-            <button class='button is-primary' onClick={() => this.storeKeys()} disabled={!passwordsMatch}>Store Keys</button>
+            <button className='button is-primary' onClick={() => this.callStoreKeysWorker()} disabled={!passwordsMatch}>Store Keys</button>
             {backButton}
           </div>
       </>
@@ -143,7 +158,7 @@ export default class NewKey extends React.Component<Props, State> {
             <div className='keygen-title'>
               Master Key:
             </div>
-            0x{this.state.masterKey}
+              {this.state.masterKey}
           </div>
           <div>
             <div className='keygen-title'>
@@ -153,8 +168,8 @@ export default class NewKey extends React.Component<Props, State> {
           </div>
         </div>
         <div className='button-section'>
-          <button class='button is-primary' onClick={() => this.showExportMasterKey()}>Export Master Key</button>
-          <button class='button is-primary' onClick={() => this.showPasswordPrompt()}>Export Validator Keys</button>
+          <button className='button is-primary' onClick={() => this.showExportMasterKey()}>Export Master Key</button>
+          <button className='button is-primary' onClick={() => this.showPasswordPrompt()}>Export Validator Keys</button>
           {backButton}
         </div>
       </>;
@@ -164,10 +179,10 @@ export default class NewKey extends React.Component<Props, State> {
           <div className='keygen-title'>
             Enter the mnemonic
           </div>
-          <input class="input" placeholder="Enter password" type="text" onChange={(event) => this.setState({ mnemonicInput: event.target.value })} />
+          <input className='input' placeholder='Enter password' type='text' onChange={(event) => this.setState({ mnemonicInput: event.target.value })} />
         </div>
         <div className='button-section'>
-          <button class='button is-primary' onClick={() => this.validateMnemonic()}>Next</button>
+          <button className='button is-primary' onClick={() => this.callValidateMnemonicWorker()}>Next</button>
           {backButton}
         </div>
       </>;
@@ -185,9 +200,9 @@ export default class NewKey extends React.Component<Props, State> {
       </>;
     } else {
       return <div className='button-section'>
-        <button class='button is-primary' onClick={() => this.generateKey()}>Generate New Key</button>
+        <button className='button is-primary' onClick={() => this.generateKey()}>Generate New Key</button>
         <br />
-        <button class='button is-primary' onClick={() => this.fromMnemonicNext()}>Restore from Mnemonic</button>
+        <button className='button is-primary' onClick={() => this.fromMnemonicNext()}>Restore from Mnemonic</button>
         <br />
       </div>;
     }
@@ -197,28 +212,34 @@ export default class NewKey extends React.Component<Props, State> {
     this.setState({ storeKeysStep: 1 });
   }
 
-  generateKeystore(key: Buffer): any {
+  storeKeys(): void {
+    const validatorKeys = deriveEth2ValidatorKeys(Buffer.from(this.state.masterKey), 0);
+    const { withdrawal, signing } = validatorKeys;
     const { password } = this.state;
-    const keystore = Keystore.encrypt(key, password, 'm/12381/60/0/0');
 
-    keystore.verifyPassword(password); // true | false
+    workerInstance.generateKeystore(withdrawal, password)
+      .then((withdrawalKeystore: string) => {
+        const withdrawalBlob = blobify(withdrawalKeystore);
 
-    // const decryptedPrivateKey: Buffer = keystore.decrypt(password);
+        workerInstance.generateKeystore(signing, password)
+          .then((signingKeystore: string) => {
+            const signingBlob = blobify(signingKeystore);
 
-    return keystore.toJSON(); // string
+            this.setState({ showOverlay: false });
+
+            saveAs(withdrawalBlob, 'wblob.json');
+            saveAs(signingBlob, 'sblob.json');
+          });
+      })
+      .catch(function (error: any) {
+        this.showError(error.message);
+        this.setState({ showOverlay: false });
+      }.bind(this));
   }
 
-  storeKeys(): void {
-    const validatorKeys = deriveEth2ValidatorKeys(this.state.masterKey, 0);
-    const { withdrawal, signing } = validatorKeys;
-
-    const withdrawalKeystore = this.generateKeystore(withdrawal);
-    const signingKeystore = this.generateKeystore(signing);
-
-    var withdrawalBlob = new Blob([JSON.stringify(withdrawalKeystore)], { type: 'application/json' });
-    var signingBlob = new Blob([JSON.stringify(signingKeystore)], { type: 'application/json' });
-    saveAs(withdrawalBlob, 'wblob.json');
-    saveAs(signingBlob, 'sblob.json');
+  callStoreKeysWorker() {
+    this.setState({ showOverlay: true, overlayText: 'Generating keystores...' });
+    this.storeKeys();
   }
 
   showExportMasterKey(): void {
@@ -226,8 +247,16 @@ export default class NewKey extends React.Component<Props, State> {
   }
 
   render () {
-    return <span class='keygen-step'>
+    return <span className='keygen-step'>
+      <LoadingOverlay
+        active={this.state.showOverlay}
+        spinner={<BounceLoader css={{ margin: 'auto' }} />}
+        text={this.state.overlayText}
+      >
+      </LoadingOverlay>
       {this.renderWizard()}
       </span>
   }
 }
+
+export default withAlert()(NewKey);

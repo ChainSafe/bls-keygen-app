@@ -10,8 +10,8 @@ export default () => {
       </div>
       <div className='content has-text-centered is-small is-family-code'>
         <div><a className='is-link has-text-grey'
-          href='https://www.npmjs.com/package/@chainsafe/placeholder'>
-          @chainsafe/placeholder {pkg.dependencies['@chainsafe/placeholder']}
+          href='https://www.npmjs.com/package/@chainsafe/bls-keygen-app'>
+          @chainsafe/bls-keygen-app {pkg.dependencies['@chainsafe/bls-keygen-app']}
         </a></div>
       </div>
     </footer>

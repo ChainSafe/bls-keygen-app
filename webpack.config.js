@@ -13,12 +13,20 @@ const config = {
   output: {
     path: resolve(__dirname, 'dist'),
     filename: '[name].js',
+    globalObject: 'this'
   },
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx']
   },
   module: {
     rules: [
+      // {
+      //   test: /worker\.js$/,
+      //   use: {
+      //     loader: 'worker-loader',
+      //     options: { inline: true, publicPath: 'http://localhost:8080/', name: 'worker.js' }
+      //   }
+      // },
       {
       test: /\.scss$/,
       use: [

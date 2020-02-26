@@ -22,6 +22,15 @@
 
 button {
   display: block;
-  // margin: auto;
   margin: 1vw;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0px;
+  width: 100%;
+}
+
+._loading_overlay_wrapper {
+  position: unset !important;
 }
