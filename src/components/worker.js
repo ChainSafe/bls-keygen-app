@@ -22,5 +22,8 @@ export function validateMnemonic(mnemonic) {
     throw new Error('not a valid mnemonic');
   }
 
-  return deriveKeyFromMnemonic(mnemonic);
+  return {
+    masterKey: deriveKeyFromMnemonic(mnemonic),
+    mnemonic,
+  };
 }

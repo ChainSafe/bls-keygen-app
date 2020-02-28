@@ -2,10 +2,9 @@ import * as React from 'react';
 import * as bip39 from 'bip39';
 import { saveAs } from 'file-saver';
 import { withAlert } from 'react-alert'
-
+import worker from 'workerize-loader!./worker.js';
 import LoadingOverlay from 'react-loading-overlay'
 import BounceLoader from 'react-spinners/BounceLoader'
-import worker from 'workerize-loader!./worker.js';
 
 import {
   deriveMasterSK,
@@ -23,7 +22,7 @@ type State = {
   fromMnemonicStep: number,
   storeKeysStep: number,
   mnemonic: string | undefined,
-  masterKey: string,
+  masterKey: Buffer,
   mnemonicInput: string,
   password: string,
   passwordConfirm: string | undefined,
@@ -106,12 +105,13 @@ class NewKey extends React.Component<Props, State> {
     });
 
     workerInstance.validateMnemonic(mnemonicInput)
-      .then((newMasterKey: string) => {
+      .then((result: { masterKey: any; mnemonic: any; }) => {
         this.setState({
           ...this.initialSteps,
           newKeyStep: 1,
           showOverlay: false,
-          masterKey: newMasterKey,
+          masterKey: result.masterKey,
+          mnemonic: result.mnemonic,
         });
       })
       .catch(function (error: any) {
@@ -247,10 +247,12 @@ class NewKey extends React.Component<Props, State> {
   }
 
   render () {
+    const bounceLoader = <BounceLoader css='margin: auto;' />;
+
     return <span className='keygen-step'>
       <LoadingOverlay
         active={this.state.showOverlay}
-        spinner={<BounceLoader css={{ margin: 'auto' }} />}
+        spinner={bounceLoader}
         text={this.state.overlayText}
       >
       </LoadingOverlay>
