@@ -1,11 +1,11 @@
-import React from 'react';
+import React from "react";
 
-import ForkMe from './components/ForkMe';
-import Header from './components/Header';
-import NewKey from './components/NewKey';
-import Footer from './components/Footer';
+import ForkMe from "./components/ForkMe";
+import Header from "./components/Header";
+import NewKey from "./components/NewKey";
+import Footer from "./components/Footer";
 
-export default function App() {
+export default function App(): object {
   return (
     <>
       <ForkMe />
