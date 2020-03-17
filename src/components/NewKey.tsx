@@ -7,11 +7,16 @@ import LoadingOverlay from "react-loading-overlay";
 import BounceLoader from "react-spinners/BounceLoader";
 
 import {
+  initBLS,
+  generatePublicKey,
+} from "@chainsafe/bls";
+
+import {
   deriveMasterSK,
 } from "@chainsafe/bls-hd-key";
 
 import {
-  deriveEth2ValidatorKeys,
+  deriveEth2ValidatorKeys, IEth2ValidatorKeys,
 } from "@chainsafe/bls-keygen";
 
 type Props = {
@@ -22,15 +27,24 @@ type State = {
   fromMnemonicStep: number;
   storeKeysStep: number;
   mnemonic: string | undefined;
-  masterKey: Uint8Array | undefined;
+  masterKey: Uint8Array;
   mnemonicInput: string;
   password: string | undefined;
   passwordConfirm: string | undefined;
   showOverlay: boolean;
   overlayText: string;
+  validatorIndex: string;
+  validatorKeys: IEth2ValidatorKeys;
+  publicKey: Buffer;
+  signingPath: string,
+  withdrawalPath: string,
 };
 
 const blobify = (keystore: string): Blob => new Blob([JSON.stringify(keystore)], {type: "application/json"});
+
+const toHex = (input: Uint8Array): string => {
+  return "0x" + Buffer.from(input).toString('hex');
+}
 
 const workerInstance = worker();
 
@@ -52,8 +66,16 @@ class NewKey extends React.Component<Props, State> {
       password: undefined,
       passwordConfirm: undefined,
       showOverlay: false,
-      overlayText: ""
+      overlayText: "",
+      validatorIndex: '',
+      withdrawalPath: 'm/12381/3600/0/0',
+      signingPath: 'm/12381/3600/0/0/0',
     };
+  }
+
+  async componentDidMount() {
+    // initialize BLS
+    // await initBLS();
   }
 
   generateEntropy(): string {
@@ -65,9 +87,14 @@ class NewKey extends React.Component<Props, State> {
   generateKey(): void {
     const entropy: Buffer = Buffer.from(this.generateEntropy());
     const masterKey: Buffer = deriveMasterSK(entropy);
+
+    const validatorKeys = deriveEth2ValidatorKeys(Buffer.from(masterKey), 0);
+
     this.setState({
       masterKey,
       newKeyStep: 1,
+      validatorKeys,
+      // publicKey: generatePublicKey(validatorKeys.signing),
     });
   }
 
@@ -90,6 +117,20 @@ class NewKey extends React.Component<Props, State> {
       this.setState({newKeyStep: this.state.newKeyStep - 1});
     } else if (this.state.fromMnemonicStep > 0) {
       this.setState({fromMnemonicStep: this.state.fromMnemonicStep - 1});
+    }
+  }
+
+  onChangeValidatorIndex(event: { target: { value: string; }; }) {
+    const indexInput = event.target.value;
+    const re = /^[0-9\b]+$/;
+
+    // if value is not blank, then test the regex
+    if (event.target.value === '' || re.test(indexInput)) {
+      this.setState({
+        validatorIndex: indexInput,
+        signingPath: indexInput ? `m/12381/3600/${indexInput}/0/0` : 'm/12381/3600/0/0/0',
+        withdrawalPath: indexInput ? `m/12381/3600/${indexInput}/0` : 'm/12381/3600/0/0',
+      });
     }
   }
 
@@ -122,6 +163,7 @@ class NewKey extends React.Component<Props, State> {
   }
 
   renderWizard(): object {
+    const {validatorIndex} = this.state;
     const backButton = <button className="button is-secondary" onClick={() => this.goBack()}>Back</button>;
 
     const passwordsMatch = this.state.password === this.state.passwordConfirm;
@@ -130,6 +172,31 @@ class NewKey extends React.Component<Props, State> {
       return <>
         <div className="text-section">
           <div>
+            <div className="keygen-title">
+                Validator Index:
+            </div>
+            <input
+              className="input"
+              placeholder="Enter Validator Index"
+              value={this.state.validatorIndex}
+              onChange={(event) => this.onChangeValidatorIndex(event)}
+            />
+            <br />
+            <br />
+            <div>
+              <div className="keygen-title">
+                Public Key:
+              </div>
+              publicKeyGoesHere
+            </div>
+            <div>
+              <div className="keygen-title">
+                  Paths:
+              </div>
+              <div><em>Signing: </em>{this.state.signingPath}</div>
+              <div><em>Withdrawal: </em>{this.state.withdrawalPath}</div>
+            </div>
+            <br />
             <div className="keygen-title">
                 Enter password for your keys:
             </div>
@@ -169,7 +236,7 @@ class NewKey extends React.Component<Props, State> {
             <div className="keygen-title">
               Master Key:
             </div>
-            {this.state.masterKey}
+            {toHex(this.state.masterKey)}
           </div>
           <div>
             <div className="keygen-title">
@@ -230,15 +297,14 @@ class NewKey extends React.Component<Props, State> {
   }
 
   storeKeys(): void {
-    const validatorKeys = deriveEth2ValidatorKeys(Buffer.from(this.state.masterKey), 0);
+    const {password, validatorKeys, withdrawalPath, signingPath} = this.state;
     const {withdrawal, signing} = validatorKeys;
-    const {password} = this.state;
 
-    workerInstance.generateKeystore(withdrawal, password)
+    workerInstance.generateKeystore(withdrawal, password, withdrawalPath)
       .then((withdrawalKeystore: string) => {
         const withdrawalBlob = blobify(withdrawalKeystore);
 
-        workerInstance.generateKeystore(signing, password)
+        workerInstance.generateKeystore(signing, password, signingPath)
           .then((signingKeystore: string) => {
             const signingBlob = blobify(signingKeystore);
 

@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.5.5",
+    "@chainsafe/bls": "^1.0.0",
     "@chainsafe/bls-hd-key": "0.0.1",
     "@chainsafe/bls-keygen": "^0.1.0",
     "@chainsafe/bls-keystore": "^1.0.0-beta7",

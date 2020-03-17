@@ -4,8 +4,8 @@ import {
     deriveKeyFromMnemonic,
 } from '@chainsafe/bls-keygen';
 
-export function generateKeystore(key, password) {
-    const keystore = Keystore.encrypt(Buffer.from(key), password, 'm/12381/60/0/0');
+export function generateKeystore(key, password, path) {
+    const keystore = Keystore.encrypt(Buffer.from(key), password, path);
 
     if (!keystore) {
       throw new Error('unable to encrypt keystore');
