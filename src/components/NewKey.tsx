@@ -5,6 +5,7 @@ import {withAlert} from "react-alert";
 import worker from "workerize-loader!./worker.js";
 import LoadingOverlay from "react-loading-overlay";
 import BounceLoader from "react-spinners/BounceLoader";
+import JSZip from 'jszip';
 
 import {
   initBLS,
@@ -75,7 +76,7 @@ class NewKey extends React.Component<Props, State> {
 
   async componentDidMount() {
     // initialize BLS
-    // await initBLS();
+    await initBLS();
   }
 
   generateEntropy(): string {
@@ -94,7 +95,7 @@ class NewKey extends React.Component<Props, State> {
       masterKey,
       newKeyStep: 1,
       validatorKeys,
-      // publicKey: generatePublicKey(validatorKeys.signing),
+      publicKey: generatePublicKey(validatorKeys.signing),
     });
   }
 
@@ -187,7 +188,7 @@ class NewKey extends React.Component<Props, State> {
               <div className="keygen-title">
                 Public Key:
               </div>
-              publicKeyGoesHere
+              {toHex(this.state.publicKey)}
             </div>
             <div>
               <div className="keygen-title">
@@ -297,7 +298,7 @@ class NewKey extends React.Component<Props, State> {
   }
 
   storeKeys(): void {
-    const {password, validatorKeys, withdrawalPath, signingPath} = this.state;
+    const {password, validatorKeys, withdrawalPath, signingPath, publicKey} = this.state;
     const {withdrawal, signing} = validatorKeys;
 
     workerInstance.generateKeystore(withdrawal, password, withdrawalPath)
@@ -310,8 +311,14 @@ class NewKey extends React.Component<Props, State> {
 
             this.setState({showOverlay: false});
 
-            saveAs(withdrawalBlob, "withdrawal-blob.json");
-            saveAs(signingBlob, "signing-blob.json");
+            const zip = new JSZip();
+            zip.file("withdrawal-blob.json", withdrawalBlob);
+            zip.file("signing-blob.json", signingBlob);
+
+            zip.generateAsync({type:"blob"})
+            .then(function(content: string | Blob) {
+                saveAs(content, `${toHex(publicKey)}.tar.gz`);
+            });
           });
       })
       .catch(function (error: { message: string }) {
