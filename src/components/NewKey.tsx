@@ -34,7 +34,7 @@ type State = {
   passwordConfirm: string | undefined;
   showOverlay: boolean;
   overlayText: string;
-  validatorIndex: string;
+  validatorIndex: number | undefined;
   validatorKeys: IEth2ValidatorKeys;
   publicKey: Buffer;
   signingPath: string,
@@ -68,7 +68,7 @@ class NewKey extends React.Component<Props, State> {
       passwordConfirm: undefined,
       showOverlay: false,
       overlayText: "",
-      validatorIndex: '',
+      validatorIndex: 0,
       withdrawalPath: 'm/12381/3600/0/0',
       signingPath: 'm/12381/3600/0/0/0',
     };
@@ -85,17 +85,31 @@ class NewKey extends React.Component<Props, State> {
     return mnemonic;
   }
 
+  deriveValidatorKeys(validatorIndex: number): void {
+    const {masterKey} = this.state;
+
+    let validatorKeys;
+    try {
+      validatorKeys = deriveEth2ValidatorKeys(Buffer.from(masterKey), validatorIndex);
+    }
+    catch(error) {
+      this.showError(error.message);
+      return;
+    }
+
+    this.setState({
+      validatorKeys,
+      publicKey: generatePublicKey(validatorKeys.signing),
+    });
+  }
+
   generateKey(): void {
     const entropy: Buffer = Buffer.from(this.generateEntropy());
     const masterKey: Buffer = deriveMasterSK(entropy);
 
-    const validatorKeys = deriveEth2ValidatorKeys(Buffer.from(masterKey), 0);
-
     this.setState({
       masterKey,
       newKeyStep: 1,
-      validatorKeys,
-      publicKey: generatePublicKey(validatorKeys.signing),
     });
   }
 
@@ -122,16 +136,17 @@ class NewKey extends React.Component<Props, State> {
   }
 
   onChangeValidatorIndex(event: { target: { value: string; }; }) {
-    const indexInput = event.target.value;
+    let indexInput = event.target.value;
     const re = /^[0-9\b]+$/;
 
     // if value is not blank, then test the regex
-    if (event.target.value === '' || re.test(indexInput)) {
+    if (indexInput === '' || re.test(indexInput)) {
       this.setState({
         validatorIndex: indexInput,
         signingPath: indexInput ? `m/12381/3600/${indexInput}/0/0` : 'm/12381/3600/0/0/0',
         withdrawalPath: indexInput ? `m/12381/3600/${indexInput}/0` : 'm/12381/3600/0/0',
       });
+      this.deriveValidatorKeys(indexInput.length > 0 ? parseInt(indexInput, 10) : 0);
     }
   }
 
@@ -179,14 +194,15 @@ class NewKey extends React.Component<Props, State> {
             <input
               className="input"
               placeholder="Enter Validator Index"
-              value={this.state.validatorIndex}
+              value={validatorIndex}
               onChange={(event) => this.onChangeValidatorIndex(event)}
+              maxLength={11}
             />
             <br />
             <br />
             <div>
               <div className="keygen-title">
-                Public Key:
+                Validator {validatorIndex || 0} Public Key
               </div>
               {toHex(this.state.publicKey)}
             </div>
@@ -225,17 +241,17 @@ class NewKey extends React.Component<Props, State> {
           <button
             className="button is-primary"
             onClick={() => this.callStoreKeysWorker()}
-            disabled={!passwordsMatch}>Store Keys
+            disabled={!passwordsMatch}>Download Keys
           </button>
           {backButton}
         </div>
       </>;
     } else if (this.state.newKeyStep === 1) {
       return <>
-        <div className="text-section">
+        <div>
           <div>
             <div className="keygen-title">
-              Master Key:
+              Master Private Key:
             </div>
             {toHex(this.state.masterKey)}
           </div>
@@ -247,7 +263,7 @@ class NewKey extends React.Component<Props, State> {
           </div>
         </div>
         <div className="button-section">
-          <button className="button is-primary" onClick={() => this.generateKey()}>Re-Generate Master Key</button>
+          <button className="button is-primary" onClick={() => this.generateKey()}>Generate New Master Key</button>
           <button className="button is-primary" onClick={() => this.showExportMasterKey()}>Export Master Key</button>
           <button className="button is-primary" onClick={() => this.showPasswordPrompt()}>Export Validator Keys</button>
           {backButton}
@@ -295,6 +311,7 @@ class NewKey extends React.Component<Props, State> {
 
   showPasswordPrompt(): void {
     this.setState({storeKeysStep: 1});
+    this.deriveValidatorKeys(0);
   }
 
   storeKeys(): void {

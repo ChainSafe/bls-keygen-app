@@ -7,11 +7,6 @@
   flex-direction: column;
 }
 
-.text-section {
-  margin-left: 25vw;
-  margin-right: 25vw;
-}
-
 .keygen-step {
   text-align: center;
 }
@@ -29,9 +24,13 @@ button {
   position: fixed;
   bottom: 0px;
   width: 100%;
-  padding: 1rem 0.5rem 2rem;
+  padding: 0.5rem 0.5rem 0.5rem;
 }
 
 ._loading_overlay_wrapper {
   position: unset !important;
+}
+
+.input {
+  max-width: 455px;
 }
