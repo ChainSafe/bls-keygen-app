@@ -47,7 +47,7 @@ const config = {
       filename: 'css/[name].bundle.css'
     }),
     new HtmlWebpackPlugin({
-      title: 'BLS Keygen App | Chainsafe Systems',
+      title: 'Eth2 BLS Keygen | ChainSafe Systems',
       template: 'src/index.html',
     }),
   ],

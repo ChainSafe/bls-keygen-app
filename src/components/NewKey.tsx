@@ -179,10 +179,10 @@ class NewKey extends React.Component<Props, State> {
   }
 
   renderWizard(): object {
-    const {validatorIndex} = this.state;
+    const {validatorIndex, password, passwordConfirm} = this.state;
     const backButton = <button className="button is-secondary" onClick={() => this.goBack()}>Back</button>;
 
-    const passwordsMatch = this.state.password === this.state.passwordConfirm;
+    const passwordsMatch = password === passwordConfirm;
 
     if (this.state.storeKeysStep === 1) {
       return <>
@@ -241,7 +241,7 @@ class NewKey extends React.Component<Props, State> {
           <button
             className="button is-primary"
             onClick={() => this.callStoreKeysWorker()}
-            disabled={!passwordsMatch}>Download Keys
+            disabled={!password || !passwordConfirm || !passwordsMatch}>Download Keys
           </button>
           {backButton}
         </div>
@@ -329,8 +329,8 @@ class NewKey extends React.Component<Props, State> {
             this.setState({showOverlay: false});
 
             const zip = new JSZip();
-            zip.file("withdrawal-blob.json", withdrawalBlob);
-            zip.file("signing-blob.json", signingBlob);
+            zip.file("withdrawal.json", withdrawalBlob);
+            zip.file("signing.json", signingBlob);
 
             zip.generateAsync({type:"blob"})
             .then(function(content: string | Blob) {
