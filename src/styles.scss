@@ -20,15 +20,23 @@ button {
   margin: 1vw;
 }
 
+._loading_overlay_overlay {
+  position: fixed !important;
+}
+
 .footer {
-  position: fixed;
   bottom: 0px;
   width: 100%;
   padding: 0.5rem 0.5rem 0.5rem;
 }
 
 ._loading_overlay_wrapper {
-  position: unset !important;
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
 }
 
 .input {
