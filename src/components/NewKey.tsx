@@ -46,6 +46,16 @@ const toHex = (input: Uint8Array): string => {
 
 const workerInstance = worker();
 
+const copyButton = (onClick: any) =>
+  <span>
+    <button
+      className="copy-button"
+      onClick={onClick}
+    >
+      <i className="fa fa-copy" />
+    </button>
+  </span>;
+
 class NewKey extends React.Component<Props, State> {
   constructor(props: object) {
     super(props);
@@ -182,6 +192,19 @@ class NewKey extends React.Component<Props, State> {
     this.storeKeys();
   }
 
+  async copyTextToClipboard(text: string) {
+    if (!navigator.clipboard) {
+      // Clipboard API not available
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(text)
+      this.props.alert.show("Copied to clipboard");
+    } catch (err) {
+      console.error('Failed to copy!', err)
+    }
+  }
+
   render (): object {
     const {validatorIndex, password, passwordConfirm, masterKey} = this.state;
     const passwordsMatch = password === passwordConfirm;
@@ -202,7 +225,7 @@ class NewKey extends React.Component<Props, State> {
           <div className="column restore-from-mnemonic">
             <div className="text-section">
               <div className="keygen-title">
-                Enter the mnemonic:
+                Enter the mnemonic
               </div>
               <input
                 className="input"
@@ -223,20 +246,24 @@ class NewKey extends React.Component<Props, State> {
                 <div>
                   <div className="key-text">
                     <div className="keygen-title">
-                      Master Private Key:
+                      Master Private Key
+                      {copyButton(() => this.copyTextToClipboard(toHex(this.state.masterKey)))}
                     </div>
-                    {toHex(this.state.masterKey)}
+                    <div id="master-key-text">
+                      {toHex(this.state.masterKey)}
+                    </div>
                   </div>
                   <div>
                     <div className="keygen-title">
-                      Mnemonic:
+                      Mnemonic
+                      {copyButton(() => this.copyTextToClipboard(this.state.mnemonic))}
                     </div>
                     {this.state.mnemonic}
                   </div>
                 </div>
                 <br />
                 <div className="keygen-title">
-                    Validator Index:
+                    Validator Index
                 </div>
                 <input
                   className="input"
@@ -249,20 +276,21 @@ class NewKey extends React.Component<Props, State> {
                 <br />
                 <div className="key-text">
                   <div className="keygen-title">
-                    Validator {validatorIndex || 0} Public Key:
+                    Validator {validatorIndex || 0} Public Key
+                    {copyButton(() => this.copyTextToClipboard(toHex(this.state.publicKey)))}
                   </div>
                   {toHex(this.state.publicKey)}
                 </div>
                 <div>
                   <div className="keygen-title">
-                      Paths:
+                      Paths
                   </div>
                   <div><em>Signing: </em>{this.state.signingPath}</div>
                   <div><em>Withdrawal: </em>{this.state.withdrawalPath}</div>
                 </div>
                 <br />
                 <div className="keygen-title">
-                    Enter password for your keys:
+                    Enter password for your keys
                 </div>
                 <input
                   className="input"
@@ -272,7 +300,7 @@ class NewKey extends React.Component<Props, State> {
                 />
                 <div>
                   <div className="keygen-title">
-                      Confirm password:
+                      Confirm password
                   </div>
                   <input
                     className="input"
