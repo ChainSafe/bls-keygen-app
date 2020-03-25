@@ -197,15 +197,12 @@ class NewKey extends React.Component<Props, State> {
       <div>
         <div className="columns">
           <div className="column generate-new-key">
-            <div>
-              <button className="button is-primary" onClick={() => this.generateKey()}>Generate New Master Key</button>
-            </div>
-            <br />
+            <button className="button is-primary" onClick={() => this.generateKey()}>Generate New Master Key</button>
           </div>
           <div className="column restore-from-mnemonic">
             <div className="text-section">
               <div className="keygen-title">
-                Enter the mnemonic
+                Enter the mnemonic:
               </div>
               <input
                 className="input"
@@ -224,7 +221,7 @@ class NewKey extends React.Component<Props, State> {
             {masterKey &&
               <div>
                 <div>
-                  <div>
+                  <div className="key-text">
                     <div className="keygen-title">
                       Master Private Key:
                     </div>
@@ -250,9 +247,9 @@ class NewKey extends React.Component<Props, State> {
                 />
                 <br />
                 <br />
-                <div>
+                <div className="key-text">
                   <div className="keygen-title">
-                    Validator {validatorIndex || 0} Public Key
+                    Validator {validatorIndex || 0} Public Key:
                   </div>
                   {toHex(this.state.publicKey)}
                 </div>

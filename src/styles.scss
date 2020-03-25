@@ -25,9 +25,15 @@ button {
 }
 
 .footer {
-  bottom: 0px;
-  width: 100%;
-  padding: 0.5rem 0.5rem 0.5rem;
+  flex: 1;
+}
+
+.key-text {
+  overflow-wrap: break-word;
+}
+
+.generate-new-key {
+  padding-top: 25px;
 }
 
 ._loading_overlay_wrapper {
