@@ -1,20 +1,15 @@
 import * as React from "react";
-import * as bip39 from "bip39";
 import {saveAs} from "file-saver";
 import {withAlert} from "react-alert";
 import worker from "workerize-loader!./worker.js";
 import LoadingOverlay from "react-loading-overlay";
 import BounceLoader from "react-spinners/BounceLoader";
-import JSZip from 'jszip';
+import JSZip from "jszip";
 
 import {
   initBLS,
   generatePublicKey,
 } from "@chainsafe/bls";
-
-import {
-  deriveMasterSK,
-} from "@chainsafe/bls-hd-key";
 
 import {
   deriveEth2ValidatorKeys, IEth2ValidatorKeys,
@@ -34,27 +29,32 @@ type State = {
   validatorIndex: number | undefined;
   validatorKeys: IEth2ValidatorKeys;
   publicKey: Buffer;
-  signingPath: string,
-  withdrawalPath: string,
+  signingPath: string;
+  withdrawalPath: string;
 };
 
 const blobify = (keystore: string): Blob => new Blob([JSON.stringify(keystore)], {type: "application/json"});
 
 const toHex = (input: Uint8Array): string => {
-  return input && "0x" + Buffer.from(input).toString('hex');
-}
+  return input && "0x" + Buffer.from(input).toString("hex");
+};
 
 const workerInstance = worker();
 
-const copyButton = (onClick: any) =>
-  <span>
-    <button
-      className="copy-button"
-      onClick={onClick}
-    >
-      <i className="fa fa-copy" />
-    </button>
-  </span>;
+interface ICopyButtonProps {
+  onClick: ((event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void);
+}
+
+export const CopyButton: React.FC<ICopyButtonProps> =
+    ({onClick}) =>
+      <span>
+        <button
+          className="copy-button"
+          onClick={onClick}
+        >
+          <i className="fa fa-copy" />
+        </button>
+      </span>;
 
 class NewKey extends React.Component<Props, State> {
   constructor(props: object) {
@@ -67,20 +67,14 @@ class NewKey extends React.Component<Props, State> {
       showOverlay: false,
       overlayText: "",
       validatorIndex: 0,
-      withdrawalPath: 'm/12381/3600/0/0',
-      signingPath: 'm/12381/3600/0/0/0',
+      withdrawalPath: "m/12381/3600/0/0",
+      signingPath: "m/12381/3600/0/0/0",
     };
   }
 
-  async componentDidMount() {
+  async componentDidMount(): Promise<void> {
     // initialize BLS
     await initBLS();
-  }
-
-  generateEntropy(): string {
-    const mnemonic = bip39.generateMnemonic();
-    this.setState({mnemonic});
-    return mnemonic;
   }
 
   deriveValidatorKeys(validatorIndex: number, masterKey: Uint8Array): void {
@@ -99,32 +93,37 @@ class NewKey extends React.Component<Props, State> {
     });
   }
 
-  generateKey(): void {
-    const entropy: Buffer = Buffer.from(this.generateEntropy());
-    const masterKey: Buffer = deriveMasterSK(entropy);
+  handleError(error: { message: string }): void {
+    this.showError(error.message);
+    this.setState({showOverlay: false});
+  }
 
+  generateMasterKey(): void {
     this.setState({
-      masterKey,
+      showOverlay: true,
+      overlayText: "Generating Master Key...",
     });
 
-    this.deriveValidatorKeys(0, masterKey);
+    workerInstance.generateMasterSK()
+      .then((result: { masterKey: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
+      .catch((error: { message: string }) => this.handleError(error));
   }
 
   mnemonicInputChange(event: { target: { value: string } }): void {
     this.setState({mnemonicInput: event.target.value});
   }
 
-  onChangeValidatorIndex(event: { target: { value: string; }; }) {
-    let indexInput = event.target.value;
+  onChangeValidatorIndex(event: { target: { value: string } }): void {
+    const indexInput = event.target.value;
     const re = /^[0-9\b]+$/;
 
     // if value is not blank, then test the regex
-    if (indexInput === '' || re.test(indexInput)) {
+    if (indexInput === "" || re.test(indexInput)) {
       const validatorIndex = indexInput.length > 0 ? parseInt(indexInput, 10) : 0;
       this.setState({
         validatorIndex,
-        signingPath: indexInput ? `m/12381/3600/${indexInput}/0/0` : 'm/12381/3600/0/0/0',
-        withdrawalPath: indexInput ? `m/12381/3600/${indexInput}/0` : 'm/12381/3600/0/0',
+        signingPath: indexInput ? `m/12381/3600/${indexInput}/0/0` : "m/12381/3600/0/0/0",
+        withdrawalPath: indexInput ? `m/12381/3600/${indexInput}/0` : "m/12381/3600/0/0",
       });
       this.deriveValidatorKeys(validatorIndex, this.state.masterKey);
     }
@@ -139,18 +138,8 @@ class NewKey extends React.Component<Props, State> {
     });
 
     workerInstance.validateMnemonic(mnemonicInput)
-      .then((result: { masterKey: Uint8Array; mnemonic: string }) => {
-        this.setState({
-          showOverlay: false,
-          masterKey: result.masterKey,
-          mnemonic: result.mnemonic,
-        });
-        this.deriveValidatorKeys(0, result.masterKey);
-      })
-      .catch(function (error: { message: string }) {
-        this.showError(error.message);
-        this.setState({showOverlay: false});
-      }.bind(this));
+      .then((result: { masterKey: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
+      .catch((error: { message: string }) => this.handleError(error));
   }
 
   showError(errorMessage: string): void {
@@ -176,15 +165,21 @@ class NewKey extends React.Component<Props, State> {
             zip.file("signing.json", signingBlob);
 
             zip.generateAsync({type:"blob"})
-            .then(function(content: string | Blob) {
+              .then(function(content: string | Blob) {
                 saveAs(content, `${toHex(publicKey)}.tar.gz`);
-            });
+              });
           });
       })
-      .catch(function (error: { message: string }) {
-        this.showError(error.message);
-        this.setState({showOverlay: false});
-      }.bind(this));
+      .catch((error: { message: string }) => this.handleError(error));
+  }
+
+  updateMasterKey(result: { masterKey: Uint8Array; mnemonic: string }): void {
+    this.setState({
+      showOverlay: false,
+      masterKey: result.masterKey,
+      mnemonic: result.mnemonic,
+    });
+    this.deriveValidatorKeys(0, result.masterKey);
   }
 
   callStoreKeysWorker(): void {
@@ -192,16 +187,14 @@ class NewKey extends React.Component<Props, State> {
     this.storeKeys();
   }
 
-  async copyTextToClipboard(text: string) {
-    if (!navigator.clipboard) {
-      // Clipboard API not available
-      return
-    }
-    try {
-      await navigator.clipboard.writeText(text)
-      this.props.alert.show("Copied to clipboard");
-    } catch (err) {
-      console.error('Failed to copy!', err)
+  async copyTextToClipboard(text: string): Promise<void> {
+    if (navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(text);
+        this.props.alert.show("Copied to clipboard");
+      } catch (err) {
+        this.props.alert.error("Failed to copy!", err);
+      }
     }
   }
 
@@ -220,7 +213,12 @@ class NewKey extends React.Component<Props, State> {
       <div>
         <div className="columns">
           <div className="column generate-new-key">
-            <button className="button is-primary" onClick={() => this.generateKey()}>Generate New Master Key</button>
+            <button
+              className="button is-primary"
+              onClick={() => this.generateMasterKey()}
+            >
+              Generate New Master Key
+            </button>
           </div>
           <div className="column restore-from-mnemonic">
             <div className="text-section">
@@ -235,7 +233,12 @@ class NewKey extends React.Component<Props, State> {
               />
             </div>
             <div>
-              <button className="button is-primary" onClick={() => this.restoreFromMnemonic()}>Restore From Mnemonic</button>
+              <button
+                className="button is-primary"
+                onClick={() => this.restoreFromMnemonic()}
+              >
+                Restore From Mnemonic
+              </button>
             </div>
           </div>
         </div>
@@ -247,7 +250,9 @@ class NewKey extends React.Component<Props, State> {
                   <div className="key-text">
                     <div className="keygen-title">
                       Master Private Key
-                      {copyButton(() => this.copyTextToClipboard(toHex(this.state.masterKey)))}
+                      <CopyButton
+                        onClick={() => this.copyTextToClipboard(toHex(this.state.masterKey))}
+                      />
                     </div>
                     <div id="master-key-text">
                       {toHex(this.state.masterKey)}
@@ -256,7 +261,9 @@ class NewKey extends React.Component<Props, State> {
                   <div>
                     <div className="keygen-title">
                       Mnemonic
-                      {copyButton(() => this.copyTextToClipboard(this.state.mnemonic))}
+                      <CopyButton
+                        onClick={() => this.copyTextToClipboard(this.state.mnemonic)}
+                      />
                     </div>
                     {this.state.mnemonic}
                   </div>
@@ -277,7 +284,9 @@ class NewKey extends React.Component<Props, State> {
                 <div className="key-text">
                   <div className="keygen-title">
                     Validator {validatorIndex || 0} Public Key
-                    {copyButton(() => this.copyTextToClipboard(toHex(this.state.publicKey)))}
+                    <CopyButton
+                      onClick={() => this.copyTextToClipboard(toHex(this.state.publicKey))}
+                    />
                   </div>
                   {toHex(this.state.publicKey)}
                 </div>

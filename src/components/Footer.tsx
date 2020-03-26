@@ -1,12 +1,10 @@
 import * as React from "react";
 
-import pkg from "../../package.json";
-
 export default (): object => {
   return (
     <footer className="footer">
       <div className="content has-text-centered">
-        Made with ❤️ by{' '}
+        Made with ❤️ by{" "}
         <a className="is-link has-text-danger is-family-code" href="https://chainsafe.io">
           ChainSafe Systems
         </a>
