@@ -210,7 +210,7 @@ class NewKey extends React.Component<Props, State> {
         text={this.state.overlayText}
       >
       </LoadingOverlay>
-      <div>
+      <div className="section">
         <div className="columns">
           <div className="column generate-new-key">
             <button
