@@ -166,7 +166,7 @@ class NewKey extends React.Component<Props, State> {
 
             zip.generateAsync({type:"blob"})
               .then(function(content: string | Blob) {
-                saveAs(content, `${toHex(publicKey)}.tar.gz`);
+                saveAs(content, `${toHex(publicKey)}.zip`);
               });
           });
       })
