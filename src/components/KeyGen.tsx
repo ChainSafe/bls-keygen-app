@@ -26,6 +26,7 @@ type State = {
   password: string | undefined;
   passwordConfirm: string | undefined;
   showOverlay: boolean;
+  showMnemonic: boolean;
   overlayText: string;
   validatorIndex: number | undefined;
   validatorKeys: IEth2ValidatorKeys;
@@ -66,6 +67,7 @@ class NewKey extends React.Component<Props, State> {
       password: undefined,
       passwordConfirm: undefined,
       showOverlay: false,
+      showMnemonic: false,
       overlayText: "",
       validatorIndex: 0,
       withdrawalPath: "m/12381/3600/0/0",
@@ -264,11 +266,17 @@ class NewKey extends React.Component<Props, State> {
                   <div>
                     <div className="keygen-title">
                       Mnemonic
-                      <CopyButton
+                      <button
+                        className="copy-button"
+                        onClick={() => this.setState({ showMnemonic: !this.state.showMnemonic })}
+                      >
+                        {this.state.showMnemonic ? 'Hide' : 'Show'}
+                      </button>
+                      {this.state.showMnemonic && <CopyButton
                         onClick={() => this.copyTextToClipboard(this.state.mnemonic)}
-                      />
+                      />}
                     </div>
-                    {this.state.mnemonic}
+                    {this.state.showMnemonic && this.state.mnemonic}
                   </div>
                 </div>
                 <br />
