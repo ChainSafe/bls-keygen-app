@@ -11,9 +11,9 @@ export function generateMasterSK() {
   const mnemonic = bip39.generateMnemonic();
   const seed = bip39.mnemonicToSeedSync(mnemonic);
   const entropy = Buffer.from(seed);
-  const masterKey = deriveMasterSK(entropy);
+  const masterSK = deriveMasterSK(entropy);
   return {
-    masterKey,
+    masterSK,
     mnemonic,
   };
 }
@@ -36,10 +36,10 @@ export function validateMnemonic(mnemonic) {
     throw new Error('not a valid mnemonic');
   }
 
-  const masterKey = deriveKeyFromMnemonic(mnemonic);
+  const masterSK = deriveKeyFromMnemonic(mnemonic);
 
   return {
-    masterKey,
+    masterSK,
     mnemonic,
   };
 }

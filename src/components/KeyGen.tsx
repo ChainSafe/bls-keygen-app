@@ -20,7 +20,8 @@ type Props = {
 };
 type State = {
   mnemonic: string | undefined;
-  masterKey: Uint8Array;
+  masterPK: Uint8Array;
+  masterSK: Uint8Array;
   mnemonicInput: string;
   password: string | undefined;
   passwordConfirm: string | undefined;
@@ -28,7 +29,7 @@ type State = {
   overlayText: string;
   validatorIndex: number | undefined;
   validatorKeys: IEth2ValidatorKeys;
-  publicKey: Buffer;
+  validatorPublicKey: Buffer;
   signingPath: string;
   withdrawalPath: string;
 };
@@ -77,10 +78,10 @@ class NewKey extends React.Component<Props, State> {
     await initBLS();
   }
 
-  deriveValidatorKeys(validatorIndex: number, masterKey: Uint8Array): void {
+  deriveValidatorKeys(validatorIndex: number, masterSK: Uint8Array): void {
     let validatorKeys;
     try {
-      validatorKeys = deriveEth2ValidatorKeys(Buffer.from(masterKey), validatorIndex);
+      validatorKeys = deriveEth2ValidatorKeys(Buffer.from(masterSK), validatorIndex);
     }
     catch(error) {
       this.showError(error.message);
@@ -89,7 +90,7 @@ class NewKey extends React.Component<Props, State> {
 
     this.setState({
       validatorKeys,
-      publicKey: generatePublicKey(validatorKeys.signing),
+      validatorPublicKey: generatePublicKey(validatorKeys.signing),
     });
   }
 
@@ -105,7 +106,7 @@ class NewKey extends React.Component<Props, State> {
     });
 
     workerInstance.generateMasterSK()
-      .then((result: { masterKey: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
+      .then((result: { masterSK: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
       .catch((error: { message: string }) => this.handleError(error));
   }
 
@@ -125,7 +126,7 @@ class NewKey extends React.Component<Props, State> {
         signingPath: indexInput ? `m/12381/3600/${indexInput}/0/0` : "m/12381/3600/0/0/0",
         withdrawalPath: indexInput ? `m/12381/3600/${indexInput}/0` : "m/12381/3600/0/0",
       });
-      this.deriveValidatorKeys(validatorIndex, this.state.masterKey);
+      this.deriveValidatorKeys(validatorIndex, this.state.masterSK);
     }
   }
 
@@ -138,7 +139,7 @@ class NewKey extends React.Component<Props, State> {
     });
 
     workerInstance.validateMnemonic(mnemonicInput)
-      .then((result: { masterKey: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
+      .then((result: { masterSK: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
       .catch((error: { message: string }) => this.handleError(error));
   }
 
@@ -147,7 +148,7 @@ class NewKey extends React.Component<Props, State> {
   }
 
   storeKeys(): void {
-    const {password, validatorKeys, withdrawalPath, signingPath, publicKey} = this.state;
+    const {password, validatorKeys, withdrawalPath, signingPath, validatorPublicKey} = this.state;
     const {withdrawal, signing} = validatorKeys;
 
     workerInstance.generateKeystore(withdrawal, password, withdrawalPath)
@@ -166,20 +167,22 @@ class NewKey extends React.Component<Props, State> {
 
             zip.generateAsync({type:"blob"})
               .then(function(content: string | Blob) {
-                saveAs(content, `${toHex(publicKey)}.zip`);
+                saveAs(content, `${toHex(validatorPublicKey)}.zip`);
               });
           });
       })
       .catch((error: { message: string }) => this.handleError(error));
   }
 
-  updateMasterKey(result: { masterKey: Uint8Array; mnemonic: string }): void {
+  updateMasterKey(result: { masterSK: Uint8Array; mnemonic: string }): void {
+    console.log('result: ', result);
     this.setState({
       showOverlay: false,
-      masterKey: result.masterKey,
+      masterSK: result.masterSK,
+      masterPK: generatePublicKey(result.masterSK),
       mnemonic: result.mnemonic,
     });
-    this.deriveValidatorKeys(0, result.masterKey);
+    this.deriveValidatorKeys(0, result.masterSK);
   }
 
   callStoreKeysWorker(): void {
@@ -199,7 +202,7 @@ class NewKey extends React.Component<Props, State> {
   }
 
   render (): object {
-    const {validatorIndex, password, passwordConfirm, masterKey} = this.state;
+    const {validatorIndex, password, passwordConfirm, masterSK} = this.state;
     const passwordsMatch = password === passwordConfirm;
     const bounceLoader = <BounceLoader css="margin: auto;" />;
 
@@ -211,7 +214,7 @@ class NewKey extends React.Component<Props, State> {
       >
       </LoadingOverlay>
       <div className="section">
-        <div className="columns">
+        <div className="card columns">
           <div className="column generate-new-key">
             <button
               className="button is-primary"
@@ -244,18 +247,18 @@ class NewKey extends React.Component<Props, State> {
         </div>
         <div className="text-section">
           <div>
-            {masterKey &&
+            {masterSK &&
               <div>
-                <div>
+                <div className="card">
                   <div className="key-text">
                     <div className="keygen-title">
-                      Master Private Key
+                      Master Public Key
                       <CopyButton
-                        onClick={() => this.copyTextToClipboard(toHex(this.state.masterKey))}
+                        onClick={() => this.copyTextToClipboard(toHex(this.state.masterPK))}
                       />
                     </div>
                     <div id="master-key-text">
-                      {toHex(this.state.masterKey)}
+                      {toHex(this.state.masterSK)}
                     </div>
                   </div>
                   <div>
@@ -269,62 +272,65 @@ class NewKey extends React.Component<Props, State> {
                   </div>
                 </div>
                 <br />
-                <div className="keygen-title">
-                    Validator Index
-                </div>
-                <input
-                  className="input"
-                  placeholder="Enter Validator Index"
-                  value={validatorIndex}
-                  onChange={(event) => this.onChangeValidatorIndex(event)}
-                  maxLength={11}
-                />
-                <br />
-                <br />
-                <div className="key-text">
+                <div className="card">
                   <div className="keygen-title">
-                    Validator {validatorIndex || 0} Public Key
-                    <CopyButton
-                      onClick={() => this.copyTextToClipboard(toHex(this.state.publicKey))}
-                    />
-                  </div>
-                  {toHex(this.state.publicKey)}
-                </div>
-                <div>
-                  <div className="keygen-title">
-                      Paths
-                  </div>
-                  <div><em>Signing: </em>{this.state.signingPath}</div>
-                  <div><em>Withdrawal: </em>{this.state.withdrawalPath}</div>
-                </div>
-                <br />
-                <div className="keygen-title">
-                    Enter password for your keys
-                </div>
-                <input
-                  className="input"
-                  placeholder="Enter password"
-                  type="password"
-                  onChange={(event) => this.setState({password: event.target.value})}
-                />
-                <div>
-                  <div className="keygen-title">
-                      Confirm password
+                      Validator Index
                   </div>
                   <input
                     className="input"
-                    placeholder="Confirm password"
-                    type="password"
-                    onChange={(event) => this.setState({passwordConfirm: event.target.value})}
+                    placeholder="Enter Validator Index"
+                    value={validatorIndex}
+                    onChange={(event) => this.onChangeValidatorIndex(event)}
+                    maxLength={11}
                   />
-                </div>
-                <div>
-                  {!passwordsMatch && <div>passwords do not match</div>}
-                  <button
-                    className="button is-primary"
-                    onClick={() => this.callStoreKeysWorker()}
-                    disabled={!password || !passwordConfirm || !passwordsMatch}>Download Keys
-                  </button>
+                  <br />
+                  <br />
+                  <div className="key-text">
+                    <div className="keygen-title">
+                      Validator {validatorIndex || 0} Public Key
+                      <CopyButton
+                        onClick={() => this.copyTextToClipboard(toHex(this.state.validatorPublicKey))}
+                      />
+                    </div>
+                    {toHex(this.state.validatorPublicKey)}
+                  </div>
+                  <div>
+                    <div className="keygen-title">
+                        Paths
+                    </div>
+                    <div><em>Signing: </em>{this.state.signingPath}</div>
+                    <div><em>Withdrawal: </em>{this.state.withdrawalPath}</div>
+                  </div>
+
+                  <br />
+                  <div className="keygen-title">
+                      Enter password for your keys
+                  </div>
+                  <input
+                    className="input"
+                    placeholder="Enter password"
+                    type="password"
+                    onChange={(event) => this.setState({password: event.target.value})}
+                  />
+                  <div>
+                    <div className="keygen-title">
+                        Confirm password
+                    </div>
+                    <input
+                      className="input"
+                      placeholder="Confirm password"
+                      type="password"
+                      onChange={(event) => this.setState({passwordConfirm: event.target.value})}
+                    />
+                  </div>
+                  <div>
+                    {!passwordsMatch && <div>passwords do not match</div>}
+                    <button
+                      className="button is-primary"
+                      onClick={() => this.callStoreKeysWorker()}
+                      disabled={!password || !passwordConfirm || !passwordsMatch}>Download Keys
+                    </button>
+                  </div>
                 </div>
               </div>
             }

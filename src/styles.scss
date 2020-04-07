@@ -53,3 +53,10 @@ button {
 .input {
   max-width: 455px;
 }
+
+// bulma overrides
+.card {
+  max-width: 1096px;
+  margin: auto;
+  padding: 31px;
+}

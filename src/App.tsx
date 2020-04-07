@@ -2,7 +2,7 @@ import React from "react";
 
 import ForkMe from "./components/ForkMe";
 import Header from "./components/Header";
-import NewKey from "./components/NewKey";
+import KeyGen from "./components/KeyGen";
 import Footer from "./components/Footer";
 
 export default function App(): object {
@@ -10,7 +10,7 @@ export default function App(): object {
     <>
       <ForkMe />
       <Header />
-      <NewKey />
+      <KeyGen />
       <Footer />
     </>
   );
