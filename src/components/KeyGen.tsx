@@ -35,7 +35,7 @@ type State = {
   withdrawalPath: string;
 };
 
-const blobify = (keystore: string): Blob => new Blob([JSON.stringify(keystore)], {type: "application/json"});
+const blobify = (keystore: string): Blob => new Blob([keystore], {type: "application/json"});
 
 const toHex = (input: Uint8Array): string => {
   return input && "0x" + Buffer.from(input).toString("hex");
