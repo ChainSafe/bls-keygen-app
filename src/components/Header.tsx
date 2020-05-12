@@ -5,6 +5,13 @@ export default function(): object {
     <div className='section'>
       <div className='container'>
         <h1 className='title is-family-code'>Eth2 BLS Keygen</h1>
+        <p className='subtitle'>Generate validator keys (Specs <a href="https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2333.md">EIP-2333</a>, <a href="https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2334.md">EIP-2334</a>, and <a href="https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2335.md">EIP-2335</a>)</p>
+        <article className="message is-danger">
+          <div className="message-body">
+            <p>This site is experimental, and should NOT be used for generating high-value keys.</p>
+            <p>Mainnet keys should always be generated offline, using well-vetted software.</p>
+          </div>
+        </article>
       </div>
     </div>
   );
