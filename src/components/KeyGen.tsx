@@ -54,7 +54,7 @@ export const CopyButton: React.FC<ICopyButtonProps> =
           className="copy-button"
           onClick={onClick}
         >
-          <i className="fa fa-copy" />
+          📋
         </button>
       </span>;
 
