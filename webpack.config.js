@@ -33,12 +33,18 @@ const config = {
             options: {
               sourceMap: true,
             }
-          }
+          },
         ]
       },{
         test: /\.tsx?$/,
         use: 'babel-loader',
         exclude: /node_modules/,
+      },
+      {
+        test: /\.(png|svg|jpg|gif)$/,
+        use: [
+          'file-loader',
+        ],
       },
     ],
   },
