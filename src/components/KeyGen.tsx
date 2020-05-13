@@ -27,6 +27,7 @@ type State = {
   passwordConfirm: string | undefined;
   showOverlay: boolean;
   showMnemonic: boolean;
+  showValidatorIndexSection: boolean;
   overlayText: string;
   validatorIndex: number | undefined;
   validatorKeys: IEth2ValidatorKeys;
@@ -68,6 +69,7 @@ class NewKey extends React.Component<Props, State> {
       passwordConfirm: undefined,
       showOverlay: false,
       showMnemonic: false,
+      showValidatorIndexSection: false,
       overlayText: "",
       validatorIndex: 0,
       withdrawalPath: "m/12381/3600/0/0",
@@ -252,17 +254,6 @@ class NewKey extends React.Component<Props, State> {
             {masterSK &&
               <div>
                 <div className="card">
-                  <div className="key-text">
-                    <div className="keygen-title">
-                      Master Public Key
-                      <CopyButton
-                        onClick={() => this.copyTextToClipboard(toHex(this.state.masterPK))}
-                      />
-                    </div>
-                    <div id="master-key-text">
-                      {toHex(this.state.masterSK)}
-                    </div>
-                  </div>
                   <div>
                     <div className="keygen-title">
                       Mnemonic
@@ -278,9 +269,31 @@ class NewKey extends React.Component<Props, State> {
                     </div>
                     {this.state.showMnemonic && this.state.mnemonic}
                   </div>
+                  <article className="message is-danger">
+                    <div className="message-body">
+                      <p>Please write down this mnemonic so you don't lose it.</p>
+                    </div>
+                  </article>
+                  <div className="key-text">
+                    <div className="keygen-title">
+                      Master Public Key
+                      <CopyButton
+                        onClick={() => this.copyTextToClipboard(toHex(this.state.masterPK))}
+                      />
+                    </div>
+                    <div id="master-key-text">
+                      {toHex(this.state.masterSK)}
+                    </div>
+                  </div>
+                  <button
+                    className="copy-button"
+                    onClick={() => this.setState({ showValidatorIndexSection: !this.state.showValidatorIndexSection })}
+                  >
+                    Next
+                  </button>
                 </div>
                 <br />
-                <div className="card">
+                {this.state.showValidatorIndexSection && <div className="card">
                   <div className="keygen-title">
                       Validator Index
                   </div>
@@ -339,7 +352,7 @@ class NewKey extends React.Component<Props, State> {
                       disabled={!password || !passwordConfirm || !passwordsMatch}>Download Keys
                     </button>
                   </div>
-                </div>
+                </div>}
               </div>
             }
           </div>
