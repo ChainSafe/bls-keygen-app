@@ -185,6 +185,7 @@ class NewKey extends React.Component<Props, State> {
       masterSK: result.masterSK,
       masterPK: generatePublicKey(result.masterSK),
       mnemonic: result.mnemonic,
+      showValidatorIndexSection: true,
     });
     this.deriveValidatorKeys(0, result.masterSK);
   }
@@ -269,11 +270,11 @@ class NewKey extends React.Component<Props, State> {
                     </div>
                     {this.state.showMnemonic && this.state.mnemonic}
                   </div>
-                  <article className="message is-danger">
+                  {!this.state.showValidatorIndexSection && <article className="message is-danger">
                     <div className="message-body">
                       <p>Please write down this mnemonic so you don't lose it.</p>
                     </div>
-                  </article>
+                  </article>}
                   <div className="key-text">
                     <div className="keygen-title">
                       Master Public Key
@@ -285,12 +286,12 @@ class NewKey extends React.Component<Props, State> {
                       {toHex(this.state.masterSK)}
                     </div>
                   </div>
-                  <button
+                  {!this.state.showValidatorIndexSection && <button
                     className="copy-button"
                     onClick={() => this.setState({ showValidatorIndexSection: !this.state.showValidatorIndexSection })}
                   >
                     Next
-                  </button>
+                  </button>}
                 </div>
                 <br />
                 {this.state.showValidatorIndexSection && <div className="card">
