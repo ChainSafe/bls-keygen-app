@@ -111,6 +111,7 @@ class NewKey extends React.Component<Props, State> {
 
     workerInstance.generateMasterSK()
       .then((result: { masterSK: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
+      .then(() => this.setState({showValidatorIndexSection: false}))
       .catch((error: { message: string }) => this.handleError(error));
   }
 
@@ -144,6 +145,7 @@ class NewKey extends React.Component<Props, State> {
 
     workerInstance.validateMnemonic(mnemonicInput)
       .then((result: { masterSK: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
+      .then(() => this.setState({showValidatorIndexSection: true}))
       .catch((error: { message: string }) => this.handleError(error));
   }
 
@@ -185,7 +187,6 @@ class NewKey extends React.Component<Props, State> {
       masterSK: result.masterSK,
       masterPK: generatePublicKey(result.masterSK),
       mnemonic: result.mnemonic,
-      showValidatorIndexSection: true,
     });
     this.deriveValidatorKeys(0, result.masterSK);
   }
