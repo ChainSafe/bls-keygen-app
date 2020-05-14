@@ -33,6 +33,7 @@ type State = {
   signingPath: string;
   withdrawalPath: string;
   step: number;
+  prevStep: number;
 };
 
 const blobify = (keystore: string): Blob => new Blob([keystore], {type: "application/json"});
@@ -81,6 +82,7 @@ class NewKey extends React.Component<Props, State> {
       withdrawalPath: "m/12381/3600/0/0",
       signingPath: "m/12381/3600/0/0/0",
       step: 1,
+      prevStep: 1,
     };
   }
 
@@ -118,8 +120,12 @@ class NewKey extends React.Component<Props, State> {
 
     workerInstance.generateMasterSK()
       .then((result: { masterSK: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
-      .then(() => this.setState({step: 2}))
+      .then(() => this.updateStep(2))
       .catch((error: { message: string }) => this.handleError(error));
+  }
+
+  updateStep(newStep: number) {
+    this.setState((prevState) => ({step: newStep, prevStep: prevState.step}));
   }
 
   mnemonicInputChange(event: { target: { value: string } }): void {
@@ -152,7 +158,7 @@ class NewKey extends React.Component<Props, State> {
 
     workerInstance.validateMnemonic(mnemonicInput)
       .then((result: { masterSK: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
-      .then(() => this.setState({step: 3}))
+      .then(() => this.updateStep(4))
       .catch((error: { message: string }) => this.handleError(error));
   }
 
@@ -214,7 +220,7 @@ class NewKey extends React.Component<Props, State> {
   }
 
   goBack() {
-    this.setState((prevState) => ({step: prevState.step - 1}))
+    this.setState((prevState) => ({step: prevState.prevStep, prevStep: prevState.prevStep - 1}));
   }
 
   render (): object {
@@ -287,7 +293,7 @@ class NewKey extends React.Component<Props, State> {
                     <BackButton onClick={() => this.goBack()} />
                     <button
                       className="button is-primary"
-                      onClick={() => this.setState({ step: 3 })}
+                      onClick={() => this.updateStep(3)}
                     >
                       Next
                     </button>
@@ -295,6 +301,31 @@ class NewKey extends React.Component<Props, State> {
                 }
                 <br />
                 {this.state.step === 3 &&
+                  <div className="column restore-from-mnemonic">
+                    <div className="text-section">
+                      <div className="keygen-title">
+                        Enter the mnemonic
+                      </div>
+                      <input
+                        className="input"
+                        placeholder="Enter phrase"
+                        type="text"
+                        onChange={(event) => this.setState({mnemonicInput: event.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <BackButton onClick={() => this.goBack()} />
+                      <button
+                        className="button is-primary"
+                        onClick={() => this.restoreFromMnemonic()}
+                      >
+                        Restore From Mnemonic
+                      </button>
+                    </div>
+                  </div>
+                }
+                <br />
+                {this.state.step === 4 &&
                   <div className="card">
                     <div className="key-text">
                       <div className="keygen-title">
