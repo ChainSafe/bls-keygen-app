@@ -26,14 +26,13 @@ type State = {
   password: string | undefined;
   passwordConfirm: string | undefined;
   showOverlay: boolean;
-  showMnemonic: boolean;
-  showValidatorIndexSection: boolean;
   overlayText: string;
   validatorIndex: number | undefined;
   validatorKeys: IEth2ValidatorKeys;
   validatorPublicKey: Buffer;
   signingPath: string;
   withdrawalPath: string;
+  step: number;
 };
 
 const blobify = (keystore: string): Blob => new Blob([keystore], {type: "application/json"});
@@ -48,16 +47,25 @@ interface ICopyButtonProps {
   onClick: ((event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void);
 }
 
-export const CopyButton: React.FC<ICopyButtonProps> =
-    ({onClick}) =>
-      <span>
-        <button
-          className="copy-button"
-          onClick={onClick}
-        >
-          📋
-        </button>
-      </span>;
+const CopyButton: React.FC<ICopyButtonProps> =
+  ({onClick}) =>
+    <span>
+      <button
+        className="copy-button"
+        onClick={onClick}
+      >
+        <span className="fa-copy" />
+      </button>
+    </span>;
+
+const BackButton = ({onClick}) => (
+  <button
+    className="button is-secondary"
+    onClick={onClick}
+  >
+    Back
+  </button>
+);
 
 class NewKey extends React.Component<Props, State> {
   constructor(props: object) {
@@ -68,12 +76,11 @@ class NewKey extends React.Component<Props, State> {
       password: undefined,
       passwordConfirm: undefined,
       showOverlay: false,
-      showMnemonic: false,
-      showValidatorIndexSection: false,
       overlayText: "",
       validatorIndex: 0,
       withdrawalPath: "m/12381/3600/0/0",
       signingPath: "m/12381/3600/0/0/0",
+      step: 1,
     };
   }
 
@@ -111,7 +118,7 @@ class NewKey extends React.Component<Props, State> {
 
     workerInstance.generateMasterSK()
       .then((result: { masterSK: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
-      .then(() => this.setState({showValidatorIndexSection: false}))
+      .then(() => this.setState({step: 2}))
       .catch((error: { message: string }) => this.handleError(error));
   }
 
@@ -145,7 +152,7 @@ class NewKey extends React.Component<Props, State> {
 
     workerInstance.validateMnemonic(mnemonicInput)
       .then((result: { masterSK: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
-      .then(() => this.setState({showValidatorIndexSection: true}))
+      .then(() => this.setState({step: 3}))
       .catch((error: { message: string }) => this.handleError(error));
   }
 
@@ -181,7 +188,6 @@ class NewKey extends React.Component<Props, State> {
   }
 
   updateMasterKey(result: { masterSK: Uint8Array; mnemonic: string }): void {
-    console.log('result: ', result);
     this.setState({
       showOverlay: false,
       masterSK: result.masterSK,
@@ -207,6 +213,10 @@ class NewKey extends React.Component<Props, State> {
     }
   }
 
+  goBack() {
+    this.setState((prevState) => ({step: prevState.step - 1}))
+  }
+
   render (): object {
     const {validatorIndex, password, passwordConfirm, masterSK} = this.state;
     const passwordsMatch = password === passwordConfirm;
@@ -220,141 +230,145 @@ class NewKey extends React.Component<Props, State> {
       >
       </LoadingOverlay>
       <div className="section">
-        <div className="card columns">
-          <div className="column generate-new-key">
-            <button
-              className="button is-primary"
-              onClick={() => this.generateMasterKey()}
-            >
-              Generate New Master Key
-            </button>
-          </div>
-          <div className="column restore-from-mnemonic">
-            <div className="text-section">
-              <div className="keygen-title">
-                Enter the mnemonic
-              </div>
-              <input
-                className="input"
-                placeholder="Enter phrase"
-                type="text"
-                onChange={(event) => this.setState({mnemonicInput: event.target.value})}
-              />
-            </div>
-            <div>
+        {this.state.step === 1 &&
+          <div className="card columns">
+            <div className="column generate-new-key">
               <button
                 className="button is-primary"
-                onClick={() => this.restoreFromMnemonic()}
+                onClick={() => this.generateMasterKey()}
               >
-                Restore From Mnemonic
+                Generate New Master Key
               </button>
             </div>
+            <div className="column restore-from-mnemonic">
+              <div className="text-section">
+                <div className="keygen-title">
+                  Enter the mnemonic
+                </div>
+                <input
+                  className="input"
+                  placeholder="Enter phrase"
+                  type="text"
+                  onChange={(event) => this.setState({mnemonicInput: event.target.value})}
+                />
+              </div>
+              <div>
+                <button
+                  className="button is-primary"
+                  onClick={() => this.restoreFromMnemonic()}
+                >
+                  Restore From Mnemonic
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        }
         <div className="text-section">
           <div>
             {masterSK &&
               <div>
-                <div className="card">
-                  <div>
-                    <div className="keygen-title">
-                      Mnemonic
-                      <button
-                        className="copy-button"
-                        onClick={() => this.setState({ showMnemonic: !this.state.showMnemonic })}
-                      >
-                        {this.state.showMnemonic ? 'Hide' : 'Show'}
-                      </button>
-                      {this.state.showMnemonic && <CopyButton
-                        onClick={() => this.copyTextToClipboard(this.state.mnemonic)}
-                      />}
+                {this.state.step === 2 &&
+                  <div className="card">
+                    <article className="message is-danger">
+                      <div className="message-body">
+                        <p>Please write down this mnemonic so you don't lose it.</p>
+                      </div>
+                    </article>
+                    <div>
+                      <div className="keygen-title">
+                        Mnemonic
+                        <CopyButton
+                          onClick={() => this.copyTextToClipboard(this.state.mnemonic)}
+                        />
+                      </div>
+                      {this.state.mnemonic}
                     </div>
-                    {this.state.showMnemonic && this.state.mnemonic}
+                    <br />
+                    <BackButton onClick={() => this.goBack()} />
+                    <button
+                      className="button is-primary"
+                      onClick={() => this.setState({ step: 3 })}
+                    >
+                      Next
+                    </button>
                   </div>
-                  {!this.state.showValidatorIndexSection && <article className="message is-danger">
-                    <div className="message-body">
-                      <p>Please write down this mnemonic so you don't lose it.</p>
-                    </div>
-                  </article>}
-                  <div className="key-text">
-                    <div className="keygen-title">
-                      Master Public Key
-                      <CopyButton
-                        onClick={() => this.copyTextToClipboard(toHex(this.state.masterPK))}
-                      />
-                    </div>
-                    <div id="master-key-text">
-                      {toHex(this.state.masterSK)}
-                    </div>
-                  </div>
-                  {!this.state.showValidatorIndexSection && <button
-                    className="copy-button"
-                    onClick={() => this.setState({ showValidatorIndexSection: !this.state.showValidatorIndexSection })}
-                  >
-                    Next
-                  </button>}
-                </div>
+                }
                 <br />
-                {this.state.showValidatorIndexSection && <div className="card">
-                  <div className="keygen-title">
-                      Validator Index
-                  </div>
-                  <input
-                    className="input"
-                    placeholder="Enter Validator Index"
-                    value={validatorIndex}
-                    onChange={(event) => this.onChangeValidatorIndex(event)}
-                    maxLength={11}
-                  />
-                  <br />
-                  <br />
-                  <div className="key-text">
-                    <div className="keygen-title">
-                      Validator {validatorIndex || 0} Public Key
-                      <CopyButton
-                        onClick={() => this.copyTextToClipboard(toHex(this.state.validatorPublicKey))}
-                      />
+                {this.state.step === 3 &&
+                  <div className="card">
+                    <div className="key-text">
+                      <div className="keygen-title">
+                        Master Public Key
+                        <CopyButton
+                          onClick={() => this.copyTextToClipboard(toHex(this.state.masterPK))}
+                        />
+                      </div>
+                      <div id="master-key-text">
+                        {toHex(this.state.masterSK)}
+                      </div>
                     </div>
-                    {toHex(this.state.validatorPublicKey)}
-                  </div>
-                  <div>
+                    <br />
                     <div className="keygen-title">
-                        Paths
-                    </div>
-                    <div><em>Signing: </em>{this.state.signingPath}</div>
-                    <div><em>Withdrawal: </em>{this.state.withdrawalPath}</div>
-                  </div>
-
-                  <br />
-                  <div className="keygen-title">
-                      Enter password for your keys
-                  </div>
-                  <input
-                    className="input"
-                    placeholder="Enter password"
-                    type="password"
-                    onChange={(event) => this.setState({password: event.target.value})}
-                  />
-                  <div>
-                    <div className="keygen-title">
-                        Confirm password
+                        Validator Index
                     </div>
                     <input
                       className="input"
-                      placeholder="Confirm password"
-                      type="password"
-                      onChange={(event) => this.setState({passwordConfirm: event.target.value})}
+                      placeholder="Enter Validator Index"
+                      value={validatorIndex}
+                      onChange={(event) => this.onChangeValidatorIndex(event)}
+                      maxLength={11}
                     />
+                    <br />
+                    <br />
+                    <div className="key-text">
+                      <div className="keygen-title">
+                        Validator {validatorIndex || 0} Public Key
+                        <CopyButton
+                          onClick={() => this.copyTextToClipboard(toHex(this.state.validatorPublicKey))}
+                        />
+                      </div>
+                      {toHex(this.state.validatorPublicKey)}
+                    </div>
+                    <div>
+                      <div className="keygen-title">
+                          Paths
+                      </div>
+                      <div><em>Signing: </em>{this.state.signingPath}</div>
+                      <div><em>Withdrawal: </em>{this.state.withdrawalPath}</div>
+                    </div>
+
+                    <br />
+                    <div className="keygen-title">
+                        Enter password for your keys
+                    </div>
+                    <input
+                      className="input"
+                      placeholder="Enter password"
+                      type="password"
+                      onChange={(event) => this.setState({password: event.target.value})}
+                    />
+                    <div>
+                      <div className="keygen-title">
+                          Confirm password
+                      </div>
+                      <input
+                        className="input"
+                        placeholder="Confirm password"
+                        type="password"
+                        onChange={(event) => this.setState({passwordConfirm: event.target.value})}
+                      />
+                    </div>
+                    <div>
+                      {!passwordsMatch && <div>passwords do not match</div>}
+                      <BackButton onClick={() => this.goBack()} />
+                      <button
+                        className="button is-primary"
+                        onClick={() => this.callStoreKeysWorker()}
+                        disabled={!password || !passwordConfirm || !passwordsMatch}>Download Keys
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    {!passwordsMatch && <div>passwords do not match</div>}
-                    <button
-                      className="button is-primary"
-                      onClick={() => this.callStoreKeysWorker()}
-                      disabled={!password || !passwordConfirm || !passwordsMatch}>Download Keys
-                    </button>
-                  </div>
-                </div>}
+                }
               </div>
             }
           </div>

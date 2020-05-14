@@ -41,6 +41,10 @@ button {
   margin: 5px;
 }
 
+.fa-copy:before {
+  content: "\f0c5";
+}
+
 ._loading_overlay_wrapper {
   height: 100%;
   width: 0;
