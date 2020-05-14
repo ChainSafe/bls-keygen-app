@@ -59,7 +59,7 @@ const CopyButton: React.FC<ICopyButtonProps> =
       </button>
     </span>;
 
-const BackButton = ({onClick}) => (
+const BackButton: React.FC<ICopyButtonProps> = ({onClick}) => (
   <button
     className="button is-secondary"
     onClick={onClick}
@@ -124,7 +124,7 @@ class NewKey extends React.Component<Props, State> {
       .catch((error: { message: string }) => this.handleError(error));
   }
 
-  updateStep(newStep: number) {
+  updateStep(newStep: number): void {
     this.setState((prevState) => ({step: newStep, prevStep: prevState.step}));
   }
 
@@ -219,7 +219,7 @@ class NewKey extends React.Component<Props, State> {
     }
   }
 
-  goBack() {
+  goBack(): void {
     this.setState((prevState) => ({step: prevState.prevStep, prevStep: prevState.prevStep - 1}));
   }
 
