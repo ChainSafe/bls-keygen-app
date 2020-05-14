@@ -223,6 +223,15 @@ class NewKey extends React.Component<Props, State> {
     this.setState((prevState) => ({step: prevState.prevStep, prevStep: prevState.prevStep - 1}));
   }
 
+  verifyNewMnemonic() {
+    const {mnemonicInput, mnemonic} = this.state;
+    if (mnemonicInput !== mnemonic) {
+      this.props.alert.error("Mnemonic entered does not match mnemonic generated in previous screen");
+    } else {
+      this.restoreFromMnemonic();
+    }
+  }
+
   render (): object {
     const {validatorIndex, password, passwordConfirm, masterSK} = this.state;
     const passwordsMatch = password === passwordConfirm;
@@ -251,10 +260,9 @@ class NewKey extends React.Component<Props, State> {
                 <div className="keygen-title">
                   Enter the mnemonic
                 </div>
-                <input
-                  className="input"
+                <textarea
+                  className='textarea'
                   placeholder="Enter phrase"
-                  type="text"
                   onChange={(event) => this.setState({mnemonicInput: event.target.value})}
                 />
               </div>
@@ -306,10 +314,9 @@ class NewKey extends React.Component<Props, State> {
                       <div className="keygen-title">
                         Enter the mnemonic
                       </div>
-                      <input
-                        className="input"
+                      <textarea
+                        className='textarea'
                         placeholder="Enter phrase"
-                        type="text"
                         onChange={(event) => this.setState({mnemonicInput: event.target.value})}
                       />
                     </div>
@@ -317,9 +324,9 @@ class NewKey extends React.Component<Props, State> {
                       <BackButton onClick={() => this.goBack()} />
                       <button
                         className="button is-primary"
-                        onClick={() => this.restoreFromMnemonic()}
+                        onClick={() => this.verifyNewMnemonic()}
                       >
-                        Restore From Mnemonic
+                        Next
                       </button>
                     </div>
                   </div>
