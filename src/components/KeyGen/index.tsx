@@ -150,13 +150,14 @@ class NewKey extends React.Component<Props, State> {
 
   restoreFromMnemonic(): void {
     const {mnemonicInput} = this.state;
+    const trimmed = this.trimMnemonic(mnemonicInput)
 
     this.setState({
       showOverlay: true,
       overlayText: "Validating mnemonic...",
     });
 
-    workerInstance.validateMnemonic(mnemonicInput)
+    workerInstance.validateMnemonic(trimmed)
       .then((result: { masterSK: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
       .then(() => this.updateStep(4))
       .catch((error: { message: string }) => this.handleError(error));
@@ -223,9 +224,14 @@ class NewKey extends React.Component<Props, State> {
     this.setState((prevState) => ({step: prevState.prevStep, prevStep: prevState.prevStep - 1}));
   }
 
+  trimMnemonic(mnemonic: string) {
+    return mnemonic.replace(/^\s*|\s*$/g,'').replace(/\f|\n|\r|\t|\v|\u00A0|\u2028|\u2029/g, '').replace(/\s\s+/g, ' ');
+  }
+
   verifyNewMnemonic() {
     const {mnemonicInput, mnemonic} = this.state;
-    if (mnemonicInput !== mnemonic) {
+    const trimmed = this.trimMnemonic(mnemonicInput);
+    if (trimmed !== mnemonic) {
       this.props.alert.error("Mnemonic entered does not match mnemonic generated in previous screen");
     } else {
       this.restoreFromMnemonic();
@@ -283,9 +289,9 @@ class NewKey extends React.Component<Props, State> {
               <div>
                 {this.state.step === 2 &&
                   <div className="card">
-                    <article className="message is-danger">
+                    <article className="message is-info">
                       <div className="message-body">
-                        <p>Please write down this mnemonic so you don't lose it.</p>
+                        <p>Write this mnemonic down to avoid permanent data loss.</p>
                       </div>
                     </article>
                     <div>
