@@ -9,6 +9,12 @@
 
 .keygen-step {
   text-align: center;
+  margin-top: -48px;
+}
+
+.re-enter-mnemonic {
+  width: 289px;
+  margin: auto;
 }
 
 .keygen-title {
@@ -39,6 +45,10 @@ button {
 .copy-button {
   display: inline;
   margin: 5px;
+}
+
+.fa-copy:before {
+  content: "\f0c5";
 }
 
 ._loading_overlay_wrapper {
