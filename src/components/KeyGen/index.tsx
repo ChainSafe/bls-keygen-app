@@ -422,4 +422,4 @@ class NewKey extends React.Component<Props, State> {
   }
 }
 
-export default withAlert()(NewKey);
+export default withAlert()(NewKey); 
