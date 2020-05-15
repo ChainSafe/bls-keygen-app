@@ -310,7 +310,7 @@ class NewKey extends React.Component<Props, State> {
                 <br />
                 {this.state.step === 3 &&
                   <div className="column restore-from-mnemonic">
-                    <div className="text-section">
+                    <div className="text-section re-enter-mnemonic">
                       <div className="keygen-title">
                         Enter the mnemonic
                       </div>
@@ -342,7 +342,7 @@ class NewKey extends React.Component<Props, State> {
                         />
                       </div>
                       <div id="master-key-text">
-                        {toHex(this.state.masterSK)}
+                        {toHex(this.state.masterPK)}
                       </div>
                     </div>
                     <br />
