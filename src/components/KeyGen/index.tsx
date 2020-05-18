@@ -171,6 +171,11 @@ class NewKey extends React.Component<Props, State> {
     const {password, validatorKeys, withdrawalPath, signingPath, validatorPublicKey} = this.state;
     const {withdrawal, signing} = validatorKeys;
 
+    if (password.length < 8) {
+      this.handleError({message: 'Password must be at least 8 characters long.'});
+      return;
+    }
+
     workerInstance.generateKeystore(withdrawal, password, withdrawalPath)
       .then((withdrawalKeystore: string) => {
         const withdrawalBlob = blobify(withdrawalKeystore);
@@ -422,4 +427,4 @@ class NewKey extends React.Component<Props, State> {
   }
 }
 
-export default withAlert()(NewKey); 
+export default withAlert()(NewKey);
