@@ -150,7 +150,7 @@ class NewKey extends React.Component<Props, State> {
 
   restoreFromMnemonic(): void {
     const {mnemonicInput} = this.state;
-    const trimmed = this.trimMnemonic(mnemonicInput)
+    const trimmed = this.trimMnemonic(mnemonicInput);
 
     this.setState({
       showOverlay: true,
@@ -170,6 +170,11 @@ class NewKey extends React.Component<Props, State> {
   storeKeys(): void {
     const {password, validatorKeys, withdrawalPath, signingPath, validatorPublicKey} = this.state;
     const {withdrawal, signing} = validatorKeys;
+
+    if (password.length < 8) {
+      this.handleError({message: "Password must be at least 8 characters long."});
+      return;
+    }
 
     workerInstance.generateKeystore(withdrawal, password, withdrawalPath)
       .then((withdrawalKeystore: string) => {
@@ -225,7 +230,7 @@ class NewKey extends React.Component<Props, State> {
   }
 
   trimMnemonic(mnemonic: string) {
-    return mnemonic.replace(/^\s*|\s*$/g,'').replace(/\f|\n|\r|\t|\v|\u00A0|\u2028|\u2029/g, '').replace(/\s\s+/g, ' ');
+    return mnemonic.replace(/^\s*|\s*$/g,"").replace(/\f|\n|\r|\t|\v|\u00A0|\u2028|\u2029/g, "").replace(/\s\s+/g, " ");
   }
 
   verifyNewMnemonic() {
@@ -383,7 +388,7 @@ class NewKey extends React.Component<Props, State> {
 
                     <br />
                     <div className="keygen-title">
-                        Enter password for your keys
+                      Enter password for your keys (Minimum 8 characters required)
                     </div>
                     <input
                       className="input"
@@ -422,4 +427,4 @@ class NewKey extends React.Component<Props, State> {
   }
 }
 
-export default withAlert()(NewKey); 
+export default withAlert()(NewKey);
