@@ -388,7 +388,7 @@ class NewKey extends React.Component<Props, State> {
 
                     <br />
                     <div className="keygen-title">
-                        Enter password for your keys
+                        Enter password for your keys (Minimum 8 characters required)
                     </div>
                     <input
                       className="input"
