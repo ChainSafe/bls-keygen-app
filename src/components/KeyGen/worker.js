@@ -26,7 +26,7 @@ export function generateKeystore(key, password, path) {
     }
 
     keystore.verifyPassword(password);
-    return keystore.toJSON();
+    return JSON.stringify(keystore.toObject(), null, 2);
 }
 
 export function validateMnemonic(mnemonic) {
