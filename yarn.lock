@@ -877,35 +877,24 @@
   dependencies:
     assert "^2.0.0"
 
-"@chainsafe/bls-hd-key@0.0.1", "@chainsafe/bls-hd-key@^0.0.1":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@chainsafe/bls-hd-key/-/bls-hd-key-0.0.1.tgz#143ff16d2dcc2ec7a0b51e211d6cadabdd65f2df"
-  integrity sha512-XuGNWhyeX/6lsWdZo0+dzCAsO7anilBb+384KUkH1LNeFjRxtve88wp+l3KiE7UBXBJg8tsgQyeR1weG5/gSaA==
-  dependencies:
-    assert "^2.0.0"
-    bcrypto "^4.2.6"
-    bn.js "^5.0.0"
-    buffer "^5.4.3"
-
-"@chainsafe/bls-keygen@^0.0.2":
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/@chainsafe/bls-keygen/-/bls-keygen-0.0.2.tgz#f0ce10f34b0e63c996631c607681aaf1b64283c6"
-  integrity sha512-4Hs2YUafoO5ENQN7bQBKbrp8mwGBGYRgau7gkFzUhTLptY9lbEGENN2sc5GvpKjANfhXTbF/vOy9lghaHsFuNg==
-  dependencies:
-    "@chainsafe/bls-hd-key" "^0.0.1"
-    assert "^2.0.0"
-    bcrypto "^4.2.6"
-    bip39 "^3.0.2"
-    buffer "^5.4.3"
-
-"@chainsafe/bls-keygen@^0.1.0":
+"@chainsafe/bls-hd-key@0.1.0", "@chainsafe/bls-hd-key@^0.1.0":
   version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@chainsafe/bls-keygen/-/bls-keygen-0.1.0.tgz#c5ef7afe7cfafc11ba25b4a7ee446c647049a17e"
-  integrity sha512-E/k3lAvOC1r5nNlmawKFxREuJxjTmWtjT5FU8LEE0m8cj7PCGsFZjaajGUiQl71yOWxg6BcnjHb7y9X/DlhCJg==
+  resolved "https://registry.yarnpkg.com/@chainsafe/bls-hd-key/-/bls-hd-key-0.1.0.tgz#5e51de16801f4b4b421e418f0d1ef0692df0c585"
+  integrity sha512-VZj+Ml4YTPz+d/K2n9q/9bLlIJnTr/xdAC5w1eCvIFtcQrZCY1Zw+bCcXKX1q6sbZpO9xhyuoepJzJX9VkMPqw==
   dependencies:
-    "@chainsafe/bls-hd-key" "^0.0.1"
     assert "^2.0.0"
-    bcrypto "^4.2.6"
+    bcrypto "^5.0.4"
+    bn.js "^5.1.1"
+    buffer "^5.4.3"
+
+"@chainsafe/bls-keygen@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@chainsafe/bls-keygen/-/bls-keygen-0.2.0.tgz#2089da875caff4334723c5ee45495e366dc57a2e"
+  integrity sha512-IcgOJ1UTiHX3T1FnSqTdf4gtavjpINPtmAwLZFQUxSuLPOfmxPPVN/yhAIYw5xCh9/mWkaFQ/dFUk6ys+BkfGQ==
+  dependencies:
+    "@chainsafe/bls-hd-key" "^0.1.0"
+    assert "^2.0.0"
+    bcrypto "^5.0.4"
     bip39 "^3.0.2"
     buffer "^5.4.3"
 
@@ -931,28 +920,21 @@
     js-sha256 "^0.9.0"
     secure-random "^1.1.1"
 
-"@chainsafe/bls@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@chainsafe/bls/-/bls-1.0.0.tgz#1db8d26b14e8b27c6b6deba7c94342629588e263"
-  integrity sha512-IBQK77Hr0RsvxC/KfOLsuR7fv5IZwiLcUUv4l39AQUnclckewoBEzzV1dExQtLuFrm+JOWJ2OAulAsg6vuS41Q==
+"@chainsafe/bls@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@chainsafe/bls/-/bls-3.0.0.tgz#2fa6bc3defa30b7d89009febd38bc692e652fb2c"
+  integrity sha512-JHyApZE5GZ/z4ngEIKCKWzXmv+/S/82khcvUgPGzj69frYtc1+e8TfYhUYcyClwuruDQd4NMv8U6nK0QvgmLjw==
   dependencies:
-    "@chainsafe/bls-keygen" "^0.0.2"
-    "@chainsafe/eth2-bls-wasm" "^0.4.0"
+    "@chainsafe/bls-keygen" "^0.2.0"
+    "@chainsafe/eth2-bls-wasm" "^0.5.0"
     assert "^1.4.1"
-  optionalDependencies:
-    "@chainsafe/eth2-spec-tests" "^0.10.1-fix"
 
-"@chainsafe/eth2-bls-wasm@^0.4.0":
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/@chainsafe/eth2-bls-wasm/-/eth2-bls-wasm-0.4.0.tgz#94e89e4e53ec6cdcc07178dbfeb0b80215550d2f"
-  integrity sha512-4BGktOKmUyyYJNCio5Zn1LdxaGWLhPqdUoZXokrfCLW3SKhw4E6MlnpAHwPtvnDuGSkmdF/GLhYeyjQYTtovqg==
+"@chainsafe/eth2-bls-wasm@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@chainsafe/eth2-bls-wasm/-/eth2-bls-wasm-0.5.0.tgz#45d0cb8807b569537d1e0099922a9617e0410b3a"
+  integrity sha512-7aHphmg504W4YTvAEvGscODrr1Fo5Mf9NxB72fuFv2BKUS/0BPgkoxG9tA+KxcFQq1hs/VUeLhq6qVdI5WfNNA==
   dependencies:
     buffer "^5.4.3"
-
-"@chainsafe/eth2-spec-tests@^0.10.1-fix":
-  version "0.10.1"
-  resolved "https://registry.yarnpkg.com/@chainsafe/eth2-spec-tests/-/eth2-spec-tests-0.10.1.tgz#a5705e0efc7333172426d4c3abdccb265c0c9ebb"
-  integrity sha512-87HnZbXT1g390sbw2ptKMON/9T61H8m5/cbfzDZFulF8ZWAZGpOdXhMArQi/PFS2o78pNHCqRKsSh1LPnjpUDg==
 
 "@chainsafe/eth2.0-params@^0.1.0":
   version "0.1.0"
@@ -1923,7 +1905,7 @@ bcrypt-pbkdf@^1.0.0:
   dependencies:
     tweetnacl "^0.14.3"
 
-bcrypto@^4.2.6, bcrypto@^4.2.8:
+bcrypto@^4.2.8:
   version "4.3.2"
   resolved "https://registry.yarnpkg.com/bcrypto/-/bcrypto-4.3.2.tgz#50d4543cc16c39a9fca1d7f457a3850703867814"
   integrity sha512-uGmeiqLvLYUPRa0XoACDgXwxZY9wE1uiFHpdtGSs7FI2YYkakqIWZklkF8sKMzXM/HaHRIjulzQ8xuDoqptjVQ==
@@ -1932,6 +1914,14 @@ bcrypto@^4.2.6, bcrypto@^4.2.8:
     bufio "~1.0.6"
     loady "~0.0.1"
     nan "^2.14.0"
+
+bcrypto@^5.0.4:
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/bcrypto/-/bcrypto-5.2.0.tgz#7cc944d2cc2b7beeff04c74f8611a001612a981d"
+  integrity sha512-yy+kDrUG6aXP7NIYq7kKIwlrXtx/51488IGfuqhyM6FYF8zNI1mPRwvAPvQ1RfE5e7WW7fVdZt4yHlmN4HJ4Hg==
+  dependencies:
+    bufio "~1.0.7"
+    loady "~0.0.1"
 
 big.js@^3.1.3:
   version "3.2.0"
@@ -1987,7 +1977,7 @@ bn.js@^4.0.0, bn.js@^4.1.0, bn.js@^4.11.8, bn.js@^4.4.0:
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.11.8.tgz#2cde09eb5ee341f484746bb0309b3253b1b1442f"
   integrity sha512-ItfYfPLkWHUjckQCk8xC+LwxgK8NYcXywGigJgSwOP8Y2iyWT4f2vsZnoOXTTbo+o5yXmIUJ4gn5538SO5S3gA==
 
-bn.js@^5.0.0, bn.js@^5.1.1:
+bn.js@^5.1.1:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-5.1.1.tgz#48efc4031a9c4041b9c99c6941d903463ab62eb5"
   integrity sha512-IUTD/REb78Z2eodka1QZyyEk66pciRcP6Sroka0aI3tG/iwIdYLrBD62RsubR7vqdt3WyX8p4jxeatzmRSphtA==
@@ -2186,6 +2176,11 @@ bufio@~1.0.6:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/bufio/-/bufio-1.0.6.tgz#e0eb6d70b2efcc997b6f8872173540967f90fa4d"
   integrity sha512-mjYZFRHmI9bk3Oeexu0rWjHFY+w6hGLabdmwSFzq+EFr4MHHsNOYduDVdYl71NG5pTPL7GGzUCMk9cYuV34/Qw==
+
+bufio@~1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/bufio/-/bufio-1.0.7.tgz#b7f63a1369a0829ed64cc14edf0573b3e382a33e"
+  integrity sha512-bd1dDQhiC+bEbEfg56IdBv7faWa6OipMs/AFFFvtFnB3wAYjlwQpQRZ0pm6ZkgtfL0pILRXhKxOiQj6UzoMR7A==
 
 builtin-status-codes@^3.0.0:
   version "3.0.0"
