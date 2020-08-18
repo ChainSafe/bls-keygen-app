@@ -1,7 +1,7 @@
 import * as React from "react";
 import {saveAs} from "file-saver";
 import {withAlert} from "react-alert";
-import worker from "workerize-loader!./worker.js";
+import worker from "workerize-loader!./worker.ts";
 import LoadingOverlay from "react-loading-overlay";
 import BounceLoader from "react-spinners/BounceLoader";
 import JSZip from "jszip";
@@ -171,7 +171,7 @@ class NewKey extends React.Component<Props, State> {
     const {password, validatorKeys, withdrawalPath, signingPath, validatorPublicKey} = this.state;
     const {withdrawal, signing} = validatorKeys;
 
-    if (password.length < 8) {
+    if (password && password.length < 8) {
       this.handleError({message: "Password must be at least 8 characters long."});
       return;
     }

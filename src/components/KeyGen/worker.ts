@@ -6,6 +6,7 @@ import {
 import {
     deriveKeyFromMnemonic,
 } from '@chainsafe/bls-keygen';
+import { generatePublicKey, initBLS } from '@chainsafe/bls';
 
 export function generateMasterSK() {
   const mnemonic = bip39.generateMnemonic();
@@ -18,18 +19,21 @@ export function generateMasterSK() {
   };
 }
 
-export function generateKeystore(key, password, path) {
-    const keystore = Keystore.encrypt(Buffer.from(key), password, path);
+export async function generateKeystore(key: Buffer, password: string, path: string) {
+    await initBLS();
+
+    const publicKey = generatePublicKey(key);
+    const keystore = await Keystore.create(password, Buffer.from(key), publicKey, path);
 
     if (!keystore) {
       throw new Error('unable to encrypt keystore');
     }
 
-    keystore.verifyPassword(password);
+    await keystore.verifyPassword(password);
     return JSON.stringify(keystore.toObject(), null, 2);
 }
 
-export function validateMnemonic(mnemonic) {
+export function validateMnemonic(mnemonic: string) {
   const isValid = bip39.validateMnemonic(mnemonic);
 
   if (!isValid) {
