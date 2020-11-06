@@ -15,8 +15,8 @@
   "dependencies": {
     "@babel/runtime": "^7.5.5",
     "@chainsafe/bls": "^3.0.0",
-    "@chainsafe/bls-hd-key": "0.1.0",
-    "@chainsafe/bls-keygen": "^0.2.1",
+    "@chainsafe/bls-hd-key": "0.2.0",
+    "@chainsafe/bls-keygen": "0.3.0",
     "@chainsafe/bls-keystore": "^2.0.0",
     "@types/workerpool": "^5.0.1",
     "bip39": "^3.0.2",
