@@ -1,3 +1,4 @@
+const webpack = require('webpack');
 const { resolve } = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -6,7 +7,6 @@ const TerserWebpackPlugin = require('terser-webpack-plugin');
 const isProd = process.env.NODE_ENV === 'production';
 
 const config = {
-  node: { fs: 'empty' },
   mode: isProd ? 'production' : 'development',
   entry: {
     index: './src/index.tsx',
@@ -17,7 +17,13 @@ const config = {
     globalObject: 'this'
   },
   resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx']
+    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    fallback: {
+      "stream": require.resolve("stream-browserify"),
+      "path": require.resolve("path-browserify"),
+      "fs": require.resolve("browserify-fs"),
+      "crypto": require.resolve("crypto-browserify")
+    },
   },
   module: {
     rules: [
@@ -49,6 +55,10 @@ const config = {
     ],
   },
   plugins: [
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer'],
+    }),
     new MiniCssExtractPlugin({
       filename: 'css/[name].bundle.css'
     }),

@@ -1,7 +1,6 @@
 import * as React from "react";
 import {saveAs} from "file-saver";
 import {withAlert} from "react-alert";
-import worker from "workerize-loader!./worker.ts";
 import LoadingOverlay from "react-loading-overlay";
 import BounceLoader from "react-spinners/BounceLoader";
 import JSZip from "jszip";
@@ -42,9 +41,12 @@ const toHex = (input: Uint8Array): string => {
   return input && "0x" + Buffer.from(input).toString("hex");
 };
 
-const workerInstance = worker();
+const generateKeystoreWorker = new Worker(new URL("./workers/generateKeystoreWorker.ts", import.meta.url));
+const generateMasterWorker = new Worker(new URL("./workers/generateMasterWorker.ts", import.meta.url));
+const verifyMnemonicWorker = new Worker(new URL("./workers/verifyMnemonicWorker.ts", import.meta.url));
 
 interface ICopyButtonProps {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onClick: ((event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void);
 }
 
@@ -118,10 +120,13 @@ class NewKey extends React.Component<Props, State> {
       overlayText: "Generating Master Key...",
     });
 
-    workerInstance.generateMasterSK()
-      .then((result: { masterSK: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
-      .then(() => this.updateStep(2))
-      .catch((error: { message: string }) => this.handleError(error));
+    generateMasterWorker.postMessage({});
+    generateMasterWorker.onmessage = ({data: {masterSK, mnemonic}}) => {
+      console.log("generate data: ", {masterSK, mnemonic});
+      this.updateMasterKey({masterSK, mnemonic});
+      this.updateStep(2);
+    };
+    generateMasterWorker.onerror = ((error: { message: string }) => this.handleError(error));
   }
 
   updateStep(newStep: number): void {
@@ -157,10 +162,13 @@ class NewKey extends React.Component<Props, State> {
       overlayText: "Validating mnemonic...",
     });
 
-    workerInstance.validateMnemonic(trimmed)
-      .then((result: { masterSK: Uint8Array; mnemonic: string }) => this.updateMasterKey(result))
-      .then(() => this.updateStep(4))
-      .catch((error: { message: string }) => this.handleError(error));
+    verifyMnemonicWorker.postMessage(trimmed);
+    verifyMnemonicWorker.onmessage = ({data: {masterSK, mnemonic}}) => {
+      console.log("resore data: ", {masterSK, mnemonic});
+      this.updateMasterKey({masterSK, mnemonic});
+      this.updateStep(4);
+    };
+    verifyMnemonicWorker.onerror = ((error: { message: string }) => this.handleError(error));
   }
 
   showError(errorMessage: string): void {
@@ -176,27 +184,27 @@ class NewKey extends React.Component<Props, State> {
       return;
     }
 
-    workerInstance.generateKeystore(withdrawal, password, withdrawalPath)
-      .then((withdrawalKeystore: string) => {
-        const withdrawalBlob = blobify(withdrawalKeystore);
+    generateKeystoreWorker.postMessage({key: withdrawal, password, path: withdrawalPath});
+    generateKeystoreWorker.onmessage = ({data: {keystoreStr}}) => {
+      const withdrawalBlob = blobify(keystoreStr);
 
-        workerInstance.generateKeystore(signing, password, signingPath)
-          .then((signingKeystore: string) => {
-            const signingBlob = blobify(signingKeystore);
+      generateKeystoreWorker.postMessage({key: signing, password, path: signingPath});
+      generateKeystoreWorker.onmessage = ({data: {keystoreStr}}) => {
+        const signingBlob = blobify(keystoreStr);
 
-            this.setState({showOverlay: false});
+        this.setState({showOverlay: false});
 
-            const zip = new JSZip();
-            zip.file("withdrawal.json", withdrawalBlob);
-            zip.file("signing.json", signingBlob);
+        const zip = new JSZip();
+        zip.file("withdrawal.json", withdrawalBlob);
+        zip.file("signing.json", signingBlob);
 
-            zip.generateAsync({type:"blob"})
-              .then(function(content: string | Blob) {
-                saveAs(content, `${toHex(validatorPublicKey)}.zip`);
-              });
+        zip.generateAsync({type:"blob"})
+          .then(function(content: string | Blob) {
+            saveAs(content, `${toHex(validatorPublicKey)}.zip`);
           });
-      })
-      .catch((error: { message: string }) => this.handleError(error));
+      };
+    };
+    generateKeystoreWorker.onerror = ((error: { message: string }) => this.handleError(error));
   }
 
   updateMasterKey(result: { masterSK: Uint8Array; mnemonic: string }): void {
@@ -229,11 +237,11 @@ class NewKey extends React.Component<Props, State> {
     this.setState((prevState) => ({step: prevState.prevStep, prevStep: prevState.prevStep - 1}));
   }
 
-  trimMnemonic(mnemonic: string) {
+  trimMnemonic(mnemonic: string): string {
     return mnemonic.replace(/^\s*|\s*$/g,"").replace(/\f|\n|\r|\t|\v|\u00A0|\u2028|\u2029/g, "").replace(/\s\s+/g, " ");
   }
 
-  verifyNewMnemonic() {
+  verifyNewMnemonic(): void {
     const {mnemonicInput, mnemonic} = this.state;
     const trimmed = this.trimMnemonic(mnemonicInput);
     if (trimmed !== mnemonic) {
