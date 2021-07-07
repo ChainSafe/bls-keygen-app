@@ -1,10 +1,10 @@
 import { Keystore } from '@chainsafe/bls-keystore';
-import { generatePublicKey, initBLS } from '@chainsafe/bls';
+import {SecretKey, init } from '@chainsafe/bls';
 
 export async function generateKeystore(key: Buffer, password: string, path: string) {
-  await initBLS();
+  await init("blst-native");
 
-  const publicKey = generatePublicKey(key);
+  const publicKey = SecretKey.fromBytes(key).toPublicKey().toBytes();
   const keystore = await Keystore.create(password, Buffer.from(key), publicKey, path);
 
   if (!keystore) {

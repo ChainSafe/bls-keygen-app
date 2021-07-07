@@ -5,10 +5,8 @@ import LoadingOverlay from "react-loading-overlay";
 import BounceLoader from "react-spinners/BounceLoader";
 import JSZip from "jszip";
 
-import {
-  initBLS,
-  generatePublicKey,
-} from "@chainsafe/bls";
+import {SecretKey} from "@chainsafe/bls";
+import {init} from "@chainsafe/bls";
 
 import {
   deriveEth2ValidatorKeys, IEth2ValidatorKeys,
@@ -19,7 +17,7 @@ type Props = {
 };
 type State = {
   mnemonic: string | undefined;
-  masterPK: Uint8Array;
+  masterPK: string;
   masterSK: Uint8Array;
   mnemonicInput: string;
   password: string | undefined;
@@ -28,7 +26,7 @@ type State = {
   overlayText: string;
   validatorIndex: number | undefined;
   validatorKeys: IEth2ValidatorKeys;
-  validatorPublicKey: Buffer;
+  validatorPublicKey: string;
   signingPath: string;
   withdrawalPath: string;
   step: number;
@@ -36,10 +34,6 @@ type State = {
 };
 
 const blobify = (keystore: string): Blob => new Blob([keystore], {type: "application/json"});
-
-const toHex = (input: Uint8Array): string => {
-  return input && "0x" + Buffer.from(input).toString("hex");
-};
 
 const generateKeystoreWorker = new Worker(new URL("./workers/generateKeystoreWorker.ts", import.meta.url));
 const generateMasterWorker = new Worker(new URL("./workers/generateMasterWorker.ts", import.meta.url));
@@ -90,7 +84,7 @@ class NewKey extends React.Component<Props, State> {
 
   async componentDidMount(): Promise<void> {
     // initialize BLS
-    await initBLS();
+    init("blst-native").then(e => console.log('alright! ', e)).catch((e) => {console.log('error!', e)})
   }
 
   deriveValidatorKeys(validatorIndex: number, masterSK: Uint8Array): void {
@@ -105,7 +99,7 @@ class NewKey extends React.Component<Props, State> {
 
     this.setState({
       validatorKeys,
-      validatorPublicKey: generatePublicKey(validatorKeys.signing),
+      validatorPublicKey: SecretKey.fromBytes(validatorKeys.signing).toPublicKey().toHex(),
     });
   }
 
@@ -200,7 +194,7 @@ class NewKey extends React.Component<Props, State> {
 
         zip.generateAsync({type:"blob"})
           .then(function(content: string | Blob) {
-            saveAs(content, `${toHex(validatorPublicKey)}.zip`);
+            saveAs(content, `${validatorPublicKey}.zip`);
           });
       };
     };
@@ -211,7 +205,7 @@ class NewKey extends React.Component<Props, State> {
     this.setState({
       showOverlay: false,
       masterSK: result.masterSK,
-      masterPK: generatePublicKey(result.masterSK),
+      masterPK: SecretKey.fromBytes(result.masterSK).toPublicKey().toHex(),
       mnemonic: result.mnemonic,
     });
     this.deriveValidatorKeys(0, result.masterSK);
@@ -357,11 +351,11 @@ class NewKey extends React.Component<Props, State> {
                       <div className="keygen-title">
                         Master Public Key
                         <CopyButton
-                          onClick={() => this.copyTextToClipboard(toHex(this.state.masterPK))}
+                          onClick={() => this.copyTextToClipboard(this.state.masterPK)}
                         />
                       </div>
                       <div id="master-key-text">
-                        {toHex(this.state.masterPK)}
+                        {this.state.masterPK}
                       </div>
                     </div>
                     <br />
@@ -381,10 +375,10 @@ class NewKey extends React.Component<Props, State> {
                       <div className="keygen-title">
                         Validator {validatorIndex || 0} Public Key
                         <CopyButton
-                          onClick={() => this.copyTextToClipboard(toHex(this.state.validatorPublicKey))}
+                          onClick={() => this.copyTextToClipboard(this.state.validatorPublicKey)}
                         />
                       </div>
-                      {toHex(this.state.validatorPublicKey)}
+                      {this.state.validatorPublicKey}
                     </div>
                     <div>
                       <div className="keygen-title">

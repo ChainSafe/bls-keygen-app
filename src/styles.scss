@@ -51,6 +51,10 @@ button {
   content: "\f0c5";
 }
 
+._loading_overlay_content {
+  display: grid;
+}
+
 ._loading_overlay_wrapper {
   height: 100%;
   width: 0;
