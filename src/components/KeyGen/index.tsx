@@ -85,7 +85,7 @@ class NewKey extends React.Component<Props, State> {
 
   async componentDidMount(): Promise<void> {
     // initialize BLS
-    init("blst-native").then(e => console.log("alright! ", e)).catch((e) => {console.log("error!", e);});
+    init("blst-native").catch((e) => {console.log(e);});
   }
 
   deriveValidatorKeys(validatorIndex: number, masterSK: Uint8Array): void {
@@ -117,7 +117,6 @@ class NewKey extends React.Component<Props, State> {
 
     generateMasterWorker.postMessage({});
     generateMasterWorker.onmessage = ({data: {masterSK, mnemonic}}) => {
-      console.log("generate data: ", {masterSK, mnemonic});
       this.updateMasterKey({masterSK, mnemonic});
       this.updateStep(2);
     };
@@ -159,7 +158,6 @@ class NewKey extends React.Component<Props, State> {
 
     verifyMnemonicWorker.postMessage(trimmed);
     verifyMnemonicWorker.onmessage = ({data: {masterSK, mnemonic}}) => {
-      console.log("resore data: ", {masterSK, mnemonic});
       this.updateMasterKey({masterSK, mnemonic});
       this.updateStep(4);
     };
