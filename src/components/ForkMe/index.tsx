@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import * as React from "react";
 import forkmeImg from "./forkme_right_orange_ff7600.png";
 

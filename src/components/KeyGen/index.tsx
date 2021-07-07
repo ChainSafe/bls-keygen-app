@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import * as React from "react";
 import {saveAs} from "file-saver";
 import {withAlert} from "react-alert";
@@ -5,8 +6,8 @@ import LoadingOverlay from "react-loading-overlay";
 import BounceLoader from "react-spinners/BounceLoader";
 import JSZip from "jszip";
 
-import {SecretKey} from "@chainsafe/bls";
-import {init} from "@chainsafe/bls";
+import {SecretKey,init} from "@chainsafe/bls";
+
 
 import {
   deriveEth2ValidatorKeys, IEth2ValidatorKeys,
@@ -84,7 +85,7 @@ class NewKey extends React.Component<Props, State> {
 
   async componentDidMount(): Promise<void> {
     // initialize BLS
-    init("blst-native").then(e => console.log('alright! ', e)).catch((e) => {console.log('error!', e)})
+    init("blst-native").then(e => console.log("alright! ", e)).catch((e) => {console.log("error!", e);});
   }
 
   deriveValidatorKeys(validatorIndex: number, masterSK: Uint8Array): void {

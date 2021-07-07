@@ -1,4 +1,4 @@
-/* eslint-disable max-len */
+/* eslint-disable max-len, @typescript-eslint/ban-types */
 import * as React from "react";
 
 export default function(): object {
