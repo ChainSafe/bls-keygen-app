@@ -1,7 +1,7 @@
 /* eslint-disable max-len, @typescript-eslint/ban-types */
 import * as React from "react";
 
-export default function(): object {
+export default function(): JSX.Element {
   return (
     <div className='section'>
       <div className='container'>

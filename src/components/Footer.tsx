@@ -2,7 +2,7 @@
 import * as React from "react";
 import pkg from "../../package.json";
 
-export default (): object => {
+export default (): JSX.Element => {
   return (
     <footer className="footer">
       <div className="content has-text-centered">

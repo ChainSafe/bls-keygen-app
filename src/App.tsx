@@ -6,7 +6,7 @@ import Header from "./components/Header";
 import KeyGen from "./components/KeyGen";
 import Footer from "./components/Footer";
 
-export default function App(): object {
+export default function App(): JSX.Element {
   return (
     <>
       <ForkMe />

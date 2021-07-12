@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import * as React from "react";
 import {saveAs} from "file-saver";
-import {withAlert} from "react-alert";
+import {AlertManager, withAlert} from "react-alert";
 import LoadingOverlay from "react-loading-overlay";
 import BounceLoader from "react-spinners/BounceLoader";
 import JSZip from "jszip";
-
 import {SecretKey,init} from "@chainsafe/bls";
 
 
@@ -14,20 +13,21 @@ import {
 } from "@chainsafe/bls-keygen";
 
 type Props = {
-  alert: object;
+  alert: AlertManager;
 };
+
 type State = {
-  mnemonic: string | undefined;
-  masterPK: string;
-  masterSK: Uint8Array;
+  mnemonic?: string | undefined;
+  masterPK?: string;
+  masterSK?: Uint8Array;
   mnemonicInput: string;
-  password: string | undefined;
-  passwordConfirm: string | undefined;
+  password?: string;
+  passwordConfirm?: string;
   showOverlay: boolean;
   overlayText: string;
   validatorIndex: number | undefined;
-  validatorKeys: IEth2ValidatorKeys;
-  validatorPublicKey: string;
+  validatorKeys?: IEth2ValidatorKeys;
+  validatorPublicKey?: string;
   signingPath: string;
   withdrawalPath: string;
   step: number;
@@ -66,13 +66,11 @@ const BackButton: React.FC<ICopyButtonProps> = ({onClick}) => (
 );
 
 class NewKey extends React.Component<Props, State> {
-  constructor(props: object) {
+  constructor(props: Props) {
     super(props);
 
     this.state = {
       mnemonicInput: "",
-      password: undefined,
-      passwordConfirm: undefined,
       showOverlay: false,
       overlayText: "",
       validatorIndex: 0,
@@ -143,6 +141,9 @@ class NewKey extends React.Component<Props, State> {
         signingPath: indexInput ? `m/12381/3600/${indexInput}/0/0` : "m/12381/3600/0/0/0",
         withdrawalPath: indexInput ? `m/12381/3600/${indexInput}/0` : "m/12381/3600/0/0",
       });
+      if (!this.state.masterSK) {
+        throw new Error("Master key not found.");
+      }
       this.deriveValidatorKeys(validatorIndex, this.state.masterSK);
     }
   }
@@ -170,6 +171,9 @@ class NewKey extends React.Component<Props, State> {
 
   storeKeys(): void {
     const {password, validatorKeys, withdrawalPath, signingPath, validatorPublicKey} = this.state;
+    if (!validatorKeys || !validatorPublicKey) {
+      throw new Error("Validator keys not found.");
+    }
     const {withdrawal, signing} = validatorKeys;
 
     if (password && password.length < 8) {
@@ -304,7 +308,7 @@ class NewKey extends React.Component<Props, State> {
                       <div className="keygen-title">
                         Mnemonic
                         <CopyButton
-                          onClick={() => this.copyTextToClipboard(this.state.mnemonic)}
+                          onClick={() => this.copyTextToClipboard(this.state.mnemonic || "")}
                         />
                       </div>
                       {this.state.mnemonic}
@@ -350,7 +354,13 @@ class NewKey extends React.Component<Props, State> {
                       <div className="keygen-title">
                         Master Public Key
                         <CopyButton
-                          onClick={() => this.copyTextToClipboard(this.state.masterPK)}
+                          onClick={() => {
+                            if (!this.state.masterPK) {
+                              this.props.alert.error("Master public key not found");
+                              return;
+                            }
+                            this.copyTextToClipboard(this.state.masterPK);
+                          }}
                         />
                       </div>
                       <div id="master-key-text">
@@ -370,15 +380,20 @@ class NewKey extends React.Component<Props, State> {
                     />
                     <br />
                     <br />
-                    <div className="key-text">
+                    {this.state.validatorPublicKey && <div className="key-text">
                       <div className="keygen-title">
                         Validator {validatorIndex || 0} Public Key
                         <CopyButton
-                          onClick={() => this.copyTextToClipboard(this.state.validatorPublicKey)}
+                          onClick={() => {
+                            if (!this.state.validatorPublicKey) {
+                              throw new Error("Validator public key not found");
+                            }
+                            this.copyTextToClipboard(this.state.validatorPublicKey);
+                          }}
                         />
                       </div>
                       {this.state.validatorPublicKey}
-                    </div>
+                    </div>}
                     <div>
                       <div className="keygen-title">
                           Paths
