@@ -6,16 +6,7 @@ const TerserWebpackPlugin = require('terser-webpack-plugin');
 
 const isProd = process.env.NODE_ENV === 'production';
 
-const config = {
-  mode: isProd ? 'production' : 'development',
-  entry: {
-    index: './src/index.tsx',
-  },
-  output: {
-    path: resolve(__dirname, 'dist'),
-    filename: '[name].js',
-    globalObject: 'this'
-  },
+const common = {
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx'],
     fallback: {
@@ -24,6 +15,19 @@ const config = {
       "fs": require.resolve("browserify-fs"),
       "crypto": require.resolve("crypto-browserify")
     },
+  }
+}
+
+const config = {
+  ...common,
+  mode: isProd ? 'production' : 'development',
+  entry: {
+    index: './src/index.tsx',
+  },
+  output: {
+    path: resolve(__dirname, 'dist'),
+    filename: '[name].js',
+    globalObject: 'this'
   },
   module: {
     rules: [
@@ -69,6 +73,37 @@ const config = {
   ],
 };
 
+const workerConfig = {
+  ...common,
+  name: "worker",
+  entry: {
+    index: './src/components/KeyGen/worker/index.ts',
+  },
+  output: {
+    path: resolve(__dirname, 'dist'),
+    filename: 'worker.js',
+  },
+  module: {
+    rules: [
+      {
+        test: /worker?$/,
+        loader: 'threads-webpack-plugin',
+      },
+      {
+        test: /\.ts?$/,
+        use: 'babel-loader',
+        exclude: /node_modules/,
+      }
+    ],
+  },
+  plugins: [
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer'],
+    }),
+  ]
+}
+
 if (isProd) {
   config.optimization = {
     minimizer: [
@@ -86,4 +121,4 @@ if (isProd) {
   };
 }
 
-module.exports = config;
+module.exports = [config, workerConfig];

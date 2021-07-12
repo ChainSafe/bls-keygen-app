@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import * as React from "react";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import forkmeImg from "./forkme_right_orange_ff7600.png";
 

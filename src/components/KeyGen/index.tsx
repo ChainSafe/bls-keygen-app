@@ -5,12 +5,14 @@ import {AlertManager, withAlert} from "react-alert";
 import LoadingOverlay from "react-loading-overlay";
 import BounceLoader from "react-spinners/BounceLoader";
 import JSZip from "jszip";
+import {ModuleThread, spawn, Thread, Worker} from "threads";
 import {SecretKey,init} from "@chainsafe/bls";
 
 
 import {
   deriveEth2ValidatorKeys, IEth2ValidatorKeys,
 } from "@chainsafe/bls-keygen";
+import {KeygenWorkerThread} from "./worker";
 
 type Props = {
   alert: AlertManager;
@@ -35,10 +37,6 @@ type State = {
 };
 
 const blobify = (keystore: string): Blob => new Blob([keystore], {type: "application/json"});
-
-const generateKeystoreWorker = new Worker(new URL("./workers/generateKeystoreWorker.ts", import.meta.url));
-const generateMasterWorker = new Worker(new URL("./workers/generateMasterWorker.ts", import.meta.url));
-const verifyMnemonicWorker = new Worker(new URL("./workers/verifyMnemonicWorker.ts", import.meta.url));
 
 interface ICopyButtonProps {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -66,6 +64,9 @@ const BackButton: React.FC<ICopyButtonProps> = ({onClick}) => (
 );
 
 class NewKey extends React.Component<Props, State> {
+  worker: Worker;
+  keygenWorkerThread: ModuleThread<KeygenWorkerThread> | undefined;
+
   constructor(props: Props) {
     super(props);
 
@@ -79,11 +80,17 @@ class NewKey extends React.Component<Props, State> {
       step: 1,
       prevStep: 1,
     };
+    this.worker = new Worker("./worker.js");
   }
 
   async componentDidMount(): Promise<void> {
     // initialize BLS
-    init("blst-native").catch((e) => {console.log(e);});
+    init("blst-native").catch((e) => {this.handleError(e);});
+    this.keygenWorkerThread = await spawn<KeygenWorkerThread>(this.worker);
+  }
+
+  async componentWillUnmount(): Promise<void> {
+    await Thread.terminate(this.keygenWorkerThread as ModuleThread<KeygenWorkerThread>);
   }
 
   deriveValidatorKeys(validatorIndex: number, masterSK: Uint8Array): void {
@@ -113,12 +120,10 @@ class NewKey extends React.Component<Props, State> {
       overlayText: "Generating Master Key...",
     });
 
-    generateMasterWorker.postMessage({});
-    generateMasterWorker.onmessage = ({data: {masterSK, mnemonic}}) => {
+    this.keygenWorkerThread?.generateMasterSK().then(({masterSK, mnemonic}) => {
       this.updateMasterKey({masterSK, mnemonic});
       this.updateStep(2);
-    };
-    generateMasterWorker.onerror = ((error: { message: string }) => this.handleError(error));
+    }).catch((error: { message: string }) => this.handleError(error));
   }
 
   updateStep(newStep: number): void {
@@ -157,12 +162,10 @@ class NewKey extends React.Component<Props, State> {
       overlayText: "Validating mnemonic...",
     });
 
-    verifyMnemonicWorker.postMessage(trimmed);
-    verifyMnemonicWorker.onmessage = ({data: {masterSK, mnemonic}}) => {
+    this.keygenWorkerThread?.validateMnemonic(trimmed).then(({masterSK, mnemonic}) => {
       this.updateMasterKey({masterSK, mnemonic});
       this.updateStep(4);
-    };
-    verifyMnemonicWorker.onerror = ((error: { message: string }) => this.handleError(error));
+    }).catch((error: { message: string }) => this.handleError(error));
   }
 
   showError(errorMessage: string): void {
@@ -176,17 +179,15 @@ class NewKey extends React.Component<Props, State> {
     }
     const {withdrawal, signing} = validatorKeys;
 
-    if (password && password.length < 8) {
+    if ((password && password.length < 8) || !password) {
       this.handleError({message: "Password must be at least 8 characters long."});
       return;
     }
 
-    generateKeystoreWorker.postMessage({key: withdrawal, password, path: withdrawalPath});
-    generateKeystoreWorker.onmessage = ({data: {keystoreStr}}) => {
+    this.keygenWorkerThread?.generateKeystore(withdrawal, password, withdrawalPath).then((keystoreStr) => {
       const withdrawalBlob = blobify(keystoreStr);
 
-      generateKeystoreWorker.postMessage({key: signing, password, path: signingPath});
-      generateKeystoreWorker.onmessage = ({data: {keystoreStr}}) => {
+      this.keygenWorkerThread?.generateKeystore(signing, password, signingPath).then((keystoreStr) => {
         const signingBlob = blobify(keystoreStr);
 
         this.setState({showOverlay: false});
@@ -199,9 +200,8 @@ class NewKey extends React.Component<Props, State> {
           .then(function(content: string | Blob) {
             saveAs(content, `${validatorPublicKey}.zip`);
           });
-      };
-    };
-    generateKeystoreWorker.onerror = ((error: { message: string }) => this.handleError(error));
+      });
+    }).catch((error: { message: string }) => this.handleError(error));
   }
 
   updateMasterKey(result: { masterSK: Uint8Array; mnemonic: string }): void {
