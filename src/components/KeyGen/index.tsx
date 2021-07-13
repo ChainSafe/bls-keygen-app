@@ -19,7 +19,7 @@ type Props = {
 };
 
 type State = {
-  mnemonic?: string | undefined;
+  mnemonic?: string;
   masterPK?: string;
   masterSK?: Uint8Array;
   mnemonicInput: string;
@@ -27,7 +27,7 @@ type State = {
   passwordConfirm?: string;
   showOverlay: boolean;
   overlayText: string;
-  validatorIndex: number | undefined;
+  validatorIndex?: number;
   validatorKeys?: IEth2ValidatorKeys;
   validatorPublicKey?: string;
   signingPath: string;
