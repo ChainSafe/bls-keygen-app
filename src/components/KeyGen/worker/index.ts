@@ -9,7 +9,7 @@ import { deriveKeyFromMnemonic } from "@chainsafe/bls-keygen";
 
 const worker = {
   async generateKeystore(key: Buffer, password: string, path: string) {
-    await init("blst-native");
+    await init("herumi");
   
     const publicKey = SecretKey.fromBytes(key).toPublicKey().toBytes();
     const keystore = await Keystore.create(password, Buffer.from(key), publicKey, path);

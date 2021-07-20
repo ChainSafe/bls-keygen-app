@@ -85,7 +85,7 @@ class NewKey extends React.Component<Props, State> {
 
   async componentDidMount(): Promise<void> {
     // initialize BLS
-    init("blst-native").catch((e) => {this.handleError(e);});
+    init("herumi").catch((e) => {this.handleError(e);});
     this.keygenWorkerThread = await spawn<KeygenWorkerThread>(this.worker);
   }
 
