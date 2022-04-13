@@ -1,3 +1,4 @@
+const webpack = require('webpack');
 const { resolve } = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -5,8 +6,20 @@ const TerserWebpackPlugin = require('terser-webpack-plugin');
 
 const isProd = process.env.NODE_ENV === 'production';
 
+const common = {
+  resolve: {
+    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    fallback: {
+      "stream": require.resolve("stream-browserify"),
+      "path": require.resolve("path-browserify"),
+      "fs": require.resolve("browserify-fs"),
+      "crypto": require.resolve("crypto-browserify")
+    },
+  }
+}
+
 const config = {
-  node: { fs: 'empty' },
+  ...common,
   mode: isProd ? 'production' : 'development',
   entry: {
     index: './src/index.tsx',
@@ -15,9 +28,6 @@ const config = {
     path: resolve(__dirname, 'dist'),
     filename: '[name].js',
     globalObject: 'this'
-  },
-  resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx']
   },
   module: {
     rules: [
@@ -49,6 +59,10 @@ const config = {
     ],
   },
   plugins: [
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer'],
+    }),
     new MiniCssExtractPlugin({
       filename: 'css/[name].bundle.css'
     }),
@@ -58,6 +72,37 @@ const config = {
     }),
   ],
 };
+
+const workerConfig = {
+  ...common,
+  name: "worker",
+  entry: {
+    index: './src/components/KeyGen/worker/index.ts',
+  },
+  output: {
+    path: resolve(__dirname, 'dist'),
+    filename: 'worker.js',
+  },
+  module: {
+    rules: [
+      {
+        test: /worker?$/,
+        loader: 'threads-webpack-plugin',
+      },
+      {
+        test: /\.ts?$/,
+        use: 'babel-loader',
+        exclude: /node_modules/,
+      }
+    ],
+  },
+  plugins: [
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer'],
+    }),
+  ]
+}
 
 if (isProd) {
   config.optimization = {
@@ -76,4 +121,4 @@ if (isProd) {
   };
 }
 
-module.exports = config;
+module.exports = [config, workerConfig];
