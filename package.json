@@ -24,7 +24,7 @@
     "core-js": "2",
     "css-loader": "^5.2.7",
     "file-saver": "^2.0.2",
-    "jszip": "^3.7.0",
+    "jszip": "^3.8.0",
     "mini-css-extract-plugin": "^1.6.2",
     "node-sass": "^7.0.3",
     "react": "^16.8.6",
